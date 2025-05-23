@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Coins, Clock, TrendingUp, Zap, Shield, Gem, Heart, Rocket, Lightning, Sword, Target } from 'lucide-react';
+import { Coins, Clock, TrendingUp, Zap, Shield, Gem, Heart, Rocket, Bolt, Sword, Target } from 'lucide-react';
 
 interface GameState {
   coins: number;
@@ -99,7 +98,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       id: 'lightning',
       name: 'Tormenta Eléctrica',
       description: 'Causa daño por área',
-      icon: Lightning,
+      icon: Bolt,
       level: 1,
       basePrice: 1500,
       currentPrice: 1500,
