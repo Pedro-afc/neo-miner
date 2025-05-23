@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -216,12 +215,12 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
   };
 
   return (
-    <div className="space-y-6 max-w-md mx-auto">
+    <div className="space-y-6 max-w-md mx-auto pb-20">
       <div className="text-center">
         <h2 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
           Cartas de Mejora
         </h2>
-        <p className="text-gray-300 text-sm mt-1">Mejora tus cartas para aumentar tu progreso</p>
+        <p className="text-gray-800 text-sm mt-1">Mejora tus cartas para aumentar tu progreso</p>
       </div>
 
       <div className="space-y-4">
@@ -236,16 +235,16 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-white/10">
-                    <Icon className="w-6 h-6 text-white" />
+                    <Icon className="w-6 h-6 text-black" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-white">{card.name}</h3>
-                    <p className="text-xs text-white">{card.description}</p>
+                    <h3 className="font-bold text-black">{card.name}</h3>
+                    <p className="text-xs text-black">{card.description}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs bg-white/20 px-2 py-1 rounded text-white">
+                      <span className="text-xs bg-white/50 px-2 py-1 rounded text-black font-medium">
                         Nivel {card.level}
                       </span>
-                      <span className="text-xs text-green-300">
+                      <span className="text-xs text-green-800 font-medium">
                         +{card.expBonus}% EXP
                       </span>
                     </div>
@@ -253,15 +252,15 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
                 </div>
                 
                 <div className="text-right">
-                  <div className="flex items-center gap-1 text-yellow-400 mb-2">
+                  <div className="flex items-center gap-1 text-yellow-700 mb-2 font-bold">
                     <Coins className="w-4 h-4" />
                     <span className="font-bold">{card.currentPrice.toLocaleString()}</span>
                   </div>
                   
                   {isOnCooldown ? (
                     <div className="text-center">
-                      <Clock className="w-4 h-4 mx-auto text-orange-400 mb-1" />
-                      <p className="text-xs text-orange-300">{formatTime(remainingTime)}</p>
+                      <Clock className="w-4 h-4 mx-auto text-orange-700 mb-1" />
+                      <p className="text-xs text-orange-800 font-bold">{formatTime(remainingTime)}</p>
                     </div>
                   ) : (
                     <Button

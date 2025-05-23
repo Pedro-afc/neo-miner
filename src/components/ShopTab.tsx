@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award } from 'lucide-react';
+import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award, Sparkles, Gem, Globe, Clock } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 
 interface GameState {
@@ -138,6 +138,47 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       rarity: 'legendary',
       effect: '+300% Daily Rewards'
     },
+    // Nuevos items para la sección de diamantes
+    {
+      id: 'cosmic_sparkle',
+      name: 'Destello Cósmico',
+      description: 'Efecto visual premium y bonus de experiencia',
+      icon: Sparkles,
+      price: 120,
+      currency: 'diamonds',
+      rarity: 'legendary',
+      effect: '+250% Visual Effects'
+    },
+    {
+      id: 'gem_master',
+      name: 'Maestro de Gemas',
+      description: 'Aumenta la rareza de los drops por 24 horas',
+      icon: Gem,
+      price: 150,
+      currency: 'diamonds',
+      rarity: 'epic',
+      effect: '+100% Rare Drops'
+    },
+    {
+      id: 'global_boost',
+      name: 'Boost Global',
+      description: 'Aumenta todas las estadísticas por 12 horas',
+      icon: Globe,
+      price: 180,
+      currency: 'diamonds',
+      rarity: 'mythic',
+      effect: '+50% All Stats'
+    },
+    {
+      id: 'time_warp',
+      name: 'Distorsión Temporal',
+      description: 'Acelera el tiempo de enfriamiento de las cartas',
+      icon: Clock,
+      price: 90,
+      currency: 'diamonds',
+      rarity: 'rare',
+      effect: '-75% Cooldowns'
+    }
   ]);
 
   const buyItem = (item: ShopItem) => {
@@ -180,6 +221,21 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
           variant: "default",
         });
         break;
+      case 'cosmic_sparkle':
+        setExperience(prev => prev + 200000);
+        toast({
+          description: "¡Destello Cósmico activado! +200,000 EXP y efectos visuales mejorados",
+          variant: "default",
+        });
+        break;
+      case 'global_boost':
+        setCoins(prev => prev + 25000);
+        setExperience(prev => prev + 150000);
+        toast({
+          description: "¡Boost Global activado! +25,000 Monedas y +150,000 EXP",
+          variant: "default",
+        });
+        break;
       default:
         setCoins(prev => prev + 10000); // Default reward
         toast({
@@ -192,34 +248,34 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
       case 'common':
-        return 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
+        return 'from-gray-300 to-gray-400 border-gray-500/30';
       case 'rare':
-        return 'from-blue-500/20 to-cyan-500/20 border-blue-500/30';
+        return 'from-blue-300 to-cyan-300 border-blue-500/30';
       case 'epic':
-        return 'from-purple-500/20 to-pink-500/20 border-purple-500/30';
+        return 'from-purple-300 to-pink-300 border-purple-500/30';
       case 'legendary':
-        return 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30';
+        return 'from-yellow-300 to-orange-300 border-yellow-500/30';
       case 'mythic':
-        return 'from-red-500/20 to-rose-500/20 border-red-500/30';
+        return 'from-red-300 to-rose-300 border-red-500/30';
       default:
-        return 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
+        return 'from-gray-300 to-gray-400 border-gray-500/30';
     }
   };
 
   const getRarityBadgeColor = (rarity: string) => {
     switch (rarity) {
       case 'common':
-        return 'bg-gray-500/20 text-white border-gray-500/30';
+        return 'bg-gray-500/20 text-black border-gray-500/30';
       case 'rare':
-        return 'bg-blue-500/20 text-white border-blue-500/30';
+        return 'bg-blue-500/20 text-black border-blue-500/30';
       case 'epic':
-        return 'bg-purple-500/20 text-white border-purple-500/30';
+        return 'bg-purple-500/20 text-black border-purple-500/30';
       case 'legendary':
-        return 'bg-yellow-500/20 text-white border-yellow-500/30';
+        return 'bg-yellow-500/20 text-black border-yellow-500/30';
       case 'mythic':
-        return 'bg-red-500/20 text-white border-red-500/30';
+        return 'bg-red-500/20 text-black border-red-500/30';
       default:
-        return 'bg-gray-500/20 text-white border-gray-500/30';
+        return 'bg-gray-500/20 text-black border-gray-500/30';
     }
   };
 
@@ -236,24 +292,24 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
           <Card key={item.id} className={`bg-gradient-to-r ${getRarityColor(item.rarity)} p-4`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-white/10">
-                  <Icon className="w-6 h-6 text-white" />
+                <div className="p-3 rounded-lg bg-white/30">
+                  <Icon className="w-6 h-6 text-black" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-white">{item.name}</h3>
+                    <h3 className="font-bold text-black">{item.name}</h3>
                     <Badge className={getRarityBadgeColor(item.rarity)}>
                       {item.rarity}
                     </Badge>
                   </div>
-                  <p className="text-sm text-white mb-1">{item.description}</p>
-                  <p className="text-xs text-green-300 font-medium">{item.effect}</p>
+                  <p className="text-sm text-black mb-1">{item.description}</p>
+                  <p className="text-xs text-green-800 font-medium">{item.effect}</p>
                 </div>
               </div>
               
               <div className="text-right">
                 <div className={`flex items-center gap-1 mb-3 ${
-                  item.currency === 'coins' ? 'text-yellow-400' : 'text-blue-400'
+                  item.currency === 'coins' ? 'text-yellow-700' : 'text-blue-700'
                 }`}>
                   {item.currency === 'coins' ? 
                     <Coins className="w-4 h-4" /> : 
@@ -289,16 +345,22 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
           Tienda
         </h2>
-        <p className="text-gray-300 text-sm mt-1">Mejora tu experiencia de juego</p>
+        <p className="text-gray-800 text-sm mt-1">Mejora tu experiencia de juego</p>
       </div>
 
-      <Tabs defaultValue="coins" value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-black/30">
-          <TabsTrigger value="coins" className="flex items-center gap-2 text-white data-[state=active]:bg-yellow-800/30">
+          <TabsTrigger 
+            value="coins" 
+            className="flex items-center gap-2 text-white data-[state=active]:bg-yellow-800/30"
+          >
             <Coins className="w-4 h-4" />
             Monedas
           </TabsTrigger>
-          <TabsTrigger value="diamonds" className="flex items-center gap-2 text-white data-[state=active]:bg-blue-800/30">
+          <TabsTrigger 
+            value="diamonds" 
+            className="flex items-center gap-2 text-white data-[state=active]:bg-blue-800/30"
+          >
             <Diamond className="w-4 h-4" />
             Diamantes
           </TabsTrigger>
@@ -314,21 +376,21 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       </Tabs>
 
       {/* Current Balance */}
-      <Card className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border-indigo-500/30 p-4">
-        <h3 className="text-lg font-bold text-white mb-3">Tu Balance</h3>
+      <Card className="bg-gradient-to-r from-indigo-300 to-purple-300 border-indigo-500/30 p-4">
+        <h3 className="text-lg font-bold text-black mb-3">Tu Balance</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="flex items-center gap-2">
-            <Coins className="w-5 h-5 text-yellow-400" />
+            <Coins className="w-5 h-5 text-yellow-700" />
             <div>
-              <p className="text-xs text-yellow-300">Monedas</p>
-              <p className="text-lg font-bold text-yellow-100">{coins.toLocaleString()}</p>
+              <p className="text-xs text-yellow-800">Monedas</p>
+              <p className="text-lg font-bold text-yellow-900">{coins.toLocaleString()}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Diamond className="w-5 h-5 text-blue-400" />
+            <Diamond className="w-5 h-5 text-blue-700" />
             <div>
-              <p className="text-xs text-blue-300">Diamantes</p>
-              <p className="text-lg font-bold text-blue-100">{diamonds.toLocaleString()}</p>
+              <p className="text-xs text-blue-800">Diamantes</p>
+              <p className="text-lg font-bold text-blue-900">{diamonds.toLocaleString()}</p>
             </div>
           </div>
         </div>
