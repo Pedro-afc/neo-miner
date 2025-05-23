@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Coins, Clock, TrendingUp, Zap, Shield, Gem } from 'lucide-react';
+import { Coins, Clock, TrendingUp, Zap, Shield, Gem, Heart, Rocket, Lightning, Sword, Target } from 'lucide-react';
 
 interface GameState {
   coins: number;
@@ -27,7 +27,7 @@ interface CardData {
   expBonus: number;
   upgradeTime: number;
   cooldownEnd?: number;
-  type: 'attack' | 'defense' | 'utility';
+  type: 'attack' | 'defense' | 'utility' | 'legendary' | 'rare';
 }
 
 const CardsTab = ({ gameState }: { gameState: GameState }) => {
@@ -69,6 +69,67 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       expBonus: 15,
       upgradeTime: 120000, // 2 minutes
       type: 'utility'
+    },
+    // Nuevas tarjetas agregadas
+    {
+      id: 'heart',
+      name: 'Corazón Vital',
+      description: 'Regenera puntos de experiencia',
+      icon: Heart,
+      level: 1,
+      basePrice: 800,
+      currentPrice: 800,
+      expBonus: 20,
+      upgradeTime: 90000, // 1.5 minutes
+      type: 'defense'
+    },
+    {
+      id: 'rocket',
+      name: 'Propulsión Cósmica',
+      description: 'Aumenta todas las ganancias un 5%',
+      icon: Rocket,
+      level: 1,
+      basePrice: 1200,
+      currentPrice: 1200,
+      expBonus: 25,
+      upgradeTime: 150000, // 2.5 minutes
+      type: 'utility'
+    },
+    {
+      id: 'lightning',
+      name: 'Tormenta Eléctrica',
+      description: 'Causa daño por área',
+      icon: Lightning,
+      level: 1,
+      basePrice: 1500,
+      currentPrice: 1500,
+      expBonus: 30,
+      upgradeTime: 180000, // 3 minutes
+      type: 'attack'
+    },
+    {
+      id: 'sword',
+      name: 'Espada Legendaria',
+      description: 'Multiplicador de daño crítico',
+      icon: Sword,
+      level: 1,
+      basePrice: 5000,
+      currentPrice: 5000,
+      expBonus: 50,
+      upgradeTime: 300000, // 5 minutes
+      type: 'legendary'
+    },
+    {
+      id: 'target',
+      name: 'Ojo de Halcón',
+      description: 'Aumenta la precisión y exp x2',
+      icon: Target,
+      level: 1,
+      basePrice: 3000,
+      currentPrice: 3000,
+      expBonus: 40,
+      upgradeTime: 240000, // 4 minutes
+      type: 'rare'
     }
   ]);
 
@@ -122,6 +183,10 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         return 'from-blue-500/20 to-cyan-500/20 border-blue-500/30';
       case 'utility':
         return 'from-purple-500/20 to-pink-500/20 border-purple-500/30';
+      case 'legendary':
+        return 'from-yellow-500/20 to-amber-500/20 border-yellow-500/30';
+      case 'rare':
+        return 'from-emerald-500/20 to-teal-500/20 border-emerald-500/30';
       default:
         return 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
     }
@@ -148,13 +213,13 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-white/10">
-                    <Icon className="w-6 h-6" />
+                    <Icon className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold text-white">{card.name}</h3>
-                    <p className="text-xs text-gray-300">{card.description}</p>
+                    <p className="text-xs text-gray-200">{card.description}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs bg-white/20 px-2 py-1 rounded">
+                      <span className="text-xs bg-white/20 px-2 py-1 rounded text-white">
                         Nivel {card.level}
                       </span>
                       <span className="text-xs text-green-400">

@@ -16,8 +16,12 @@ const Navbar = ({ activeTab, setActiveTab }: NavbarProps) => {
     { id: 'airdrop', icon: Plane, label: 'Airdrop' },
   ];
 
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-black/20 backdrop-blur-lg border-t border-white/10 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-black/50 backdrop-blur-lg border-t border-white/10 z-50">
       <TabsList className="grid w-full grid-cols-5 bg-transparent h-16 p-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -25,7 +29,7 @@ const Navbar = ({ activeTab, setActiveTab }: NavbarProps) => {
             <TabsTrigger
               key={tab.id}
               value={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`flex flex-col items-center justify-center gap-1 h-full text-xs font-medium transition-all duration-200 ${
                 activeTab === tab.id
                   ? 'text-yellow-400 bg-yellow-400/10 shadow-lg scale-105'

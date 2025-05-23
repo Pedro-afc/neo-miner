@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket } from 'lucide-react';
+import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award } from 'lucide-react';
 
 interface GameState {
   coins: number;
@@ -24,7 +24,7 @@ interface ShopItem {
   icon: any;
   price: number;
   currency: 'coins' | 'diamonds';
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
   effect: string;
   purchased?: boolean;
 }
@@ -64,6 +64,26 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       rarity: 'epic',
       effect: '+400% Coins'
     },
+    {
+      id: 'flame_sword',
+      name: 'Espada de Fuego',
+      description: 'Daño ardiente continuo por 1 hora',
+      icon: Flame,
+      price: 25000,
+      currency: 'coins',
+      rarity: 'epic',
+      effect: '+200 DPS'
+    },
+    {
+      id: 'axe_power',
+      name: 'Hacha de Guerra',
+      description: 'Golpes críticos por 45 minutos',
+      icon: Axe,
+      price: 35000,
+      currency: 'coins',
+      rarity: 'rare',
+      effect: '+50% Crítico'
+    },
     
     // Diamonds section
     {
@@ -78,7 +98,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
     },
     {
       id: 'instant_level',
-      name: 'Subida de Nivel Instantánea',
+      name: 'Subida de Nivel',
       description: 'Gana un nivel completo al instante',
       icon: Rocket,
       price: 25,
@@ -95,7 +115,27 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       currency: 'diamonds',
       rarity: 'rare',
       effect: '+50 Diamonds'
-    }
+    },
+    {
+      id: 'mythic_shield',
+      name: 'Escudo Mítico',
+      description: 'Protección total contra daños',
+      icon: Shield,
+      price: 75,
+      currency: 'diamonds',
+      rarity: 'mythic',
+      effect: '100% Protección'
+    },
+    {
+      id: 'legendary_trophy',
+      name: 'Trofeo Legendario',
+      description: 'Recompensas diarias mejoradas',
+      icon: Award,
+      price: 200,
+      currency: 'diamonds',
+      rarity: 'legendary',
+      effect: '+300% Daily Rewards'
+    },
   ]);
 
   const buyItem = (item: ShopItem) => {
@@ -135,6 +175,8 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         return 'from-purple-500/20 to-pink-500/20 border-purple-500/30';
       case 'legendary':
         return 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30';
+      case 'mythic':
+        return 'from-red-500/20 to-rose-500/20 border-red-500/30';
       default:
         return 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
     }
@@ -143,15 +185,17 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
   const getRarityBadgeColor = (rarity: string) => {
     switch (rarity) {
       case 'common':
-        return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+        return 'bg-gray-500/20 text-white border-gray-500/30';
       case 'rare':
-        return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+        return 'bg-blue-500/20 text-white border-blue-500/30';
       case 'epic':
-        return 'bg-purple-500/20 text-purple-300 border-purple-500/30';
+        return 'bg-purple-500/20 text-white border-purple-500/30';
       case 'legendary':
-        return 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30';
+        return 'bg-yellow-500/20 text-white border-yellow-500/30';
+      case 'mythic':
+        return 'bg-red-500/20 text-white border-red-500/30';
       default:
-        return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+        return 'bg-gray-500/20 text-white border-gray-500/30';
     }
   };
 
@@ -169,7 +213,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-lg bg-white/10">
-                  <Icon className="w-6 h-6" />
+                  <Icon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -178,7 +222,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
                       {item.rarity}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-300 mb-1">{item.description}</p>
+                  <p className="text-sm text-gray-200 mb-1">{item.description}</p>
                   <p className="text-xs text-green-400 font-medium">{item.effect}</p>
                 </div>
               </div>
@@ -216,7 +260,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
   );
 
   return (
-    <div className="space-y-6 max-w-md mx-auto">
+    <div className="space-y-6 max-w-md mx-auto pb-20">
       <div className="text-center">
         <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
           Tienda
@@ -226,11 +270,11 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
 
       <Tabs defaultValue="coins" className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-white/10">
-          <TabsTrigger value="coins" className="flex items-center gap-2">
+          <TabsTrigger value="coins" className="flex items-center gap-2 text-white">
             <Coins className="w-4 h-4" />
             Monedas
           </TabsTrigger>
-          <TabsTrigger value="diamonds" className="flex items-center gap-2">
+          <TabsTrigger value="diamonds" className="flex items-center gap-2 text-white">
             <Diamond className="w-4 h-4" />
             Diamantes
           </TabsTrigger>

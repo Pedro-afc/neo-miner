@@ -32,7 +32,8 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
     
     // Add coins and experience
     setCoins(prev => prev + clickPower);
-    setExperience(prev => prev + clickPower * 100);
+    // Aumenta la experiencia en 1 con cada click (antes era clickPower * 100)
+    setExperience(prev => prev + 1);
     
     // Add click effect
     const effectId = Date.now();
@@ -76,7 +77,7 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm text-purple-300">Nivel {level}</span>
-            <span className="text-xs text-purple-400">{experience.toLocaleString()} / {experienceRequired.toLocaleString()}</span>
+            <span className="text-xs text-purple-300">{experience.toLocaleString()} / {experienceRequired.toLocaleString()}</span>
           </div>
           <Progress value={experiencePercentage} className="h-2 bg-purple-900/50" />
         </div>
@@ -117,17 +118,17 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-2 text-center text-sm">
-        <div className="bg-white/5 rounded-lg p-2">
+        <div className="bg-white/10 rounded-lg p-2">
           <p className="text-gray-400">Clicks/Min</p>
-          <p className="font-bold">0</p>
+          <p className="font-bold text-white">0</p>
         </div>
-        <div className="bg-white/5 rounded-lg p-2">
+        <div className="bg-white/10 rounded-lg p-2">
           <p className="text-gray-400">Total Clicks</p>
-          <p className="font-bold">0</p>
+          <p className="font-bold text-white">0</p>
         </div>
-        <div className="bg-white/5 rounded-lg p-2">
+        <div className="bg-white/10 rounded-lg p-2">
           <p className="text-gray-400">Auto-Click</p>
-          <p className="font-bold">0/seg</p>
+          <p className="font-bold text-white">0/seg</p>
         </div>
       </div>
     </div>
