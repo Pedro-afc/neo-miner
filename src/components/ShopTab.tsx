@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award } from 'lucide-react';
+import { toast } from "@/components/ui/use-toast";
 
 interface GameState {
   coins: number;
@@ -31,6 +32,7 @@ interface ShopItem {
 
 const ShopTab = ({ gameState }: { gameState: GameState }) => {
   const { coins, setCoins, diamonds, setDiamonds, setExperience } = gameState;
+  const [activeTab, setActiveTab] = useState<string>('coins');
   
   const [shopItems] = useState<ShopItem[]>([
     // Coins section
@@ -140,7 +142,13 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
 
   const buyItem = (item: ShopItem) => {
     const canAfford = item.currency === 'coins' ? coins >= item.price : diamonds >= item.price;
-    if (!canAfford) return;
+    if (!canAfford) {
+      toast({
+        description: `No tienes suficientes ${item.currency === 'coins' ? 'monedas' : 'diamantes'} para comprar este item.`,
+        variant: "destructive",
+      });
+      return;
+    }
 
     // Deduct currency
     if (item.currency === 'coins') {
@@ -153,15 +161,31 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
     switch (item.id) {
       case 'exp_boost':
         setExperience(prev => prev + 100000);
+        toast({
+          description: "¡Boost de Experiencia aplicado! +100,000 EXP",
+          variant: "default",
+        });
         break;
       case 'instant_level':
         setExperience(prev => prev + 1000000);
+        toast({
+          description: "¡Subida de Nivel aplicada! +1,000,000 EXP",
+          variant: "default",
+        });
         break;
       case 'diamond_pack':
         setDiamonds(prev => prev + 50);
+        toast({
+          description: "¡Pack de Diamantes adquirido! +50 Diamantes",
+          variant: "default",
+        });
         break;
       default:
         setCoins(prev => prev + 10000); // Default reward
+        toast({
+          description: "¡Item adquirido! +10,000 Monedas",
+          variant: "default",
+        });
     }
   };
 
@@ -222,8 +246,8 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
                       {item.rarity}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-200 mb-1">{item.description}</p>
-                  <p className="text-xs text-green-400 font-medium">{item.effect}</p>
+                  <p className="text-sm text-white mb-1">{item.description}</p>
+                  <p className="text-xs text-green-300 font-medium">{item.effect}</p>
                 </div>
               </div>
               
@@ -268,13 +292,13 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         <p className="text-gray-300 text-sm mt-1">Mejora tu experiencia de juego</p>
       </div>
 
-      <Tabs defaultValue="coins" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-white/10">
-          <TabsTrigger value="coins" className="flex items-center gap-2 text-white">
+      <Tabs defaultValue="coins" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 bg-black/30">
+          <TabsTrigger value="coins" className="flex items-center gap-2 text-white data-[state=active]:bg-yellow-800/30">
             <Coins className="w-4 h-4" />
             Monedas
           </TabsTrigger>
-          <TabsTrigger value="diamonds" className="flex items-center gap-2 text-white">
+          <TabsTrigger value="diamonds" className="flex items-center gap-2 text-white data-[state=active]:bg-blue-800/30">
             <Diamond className="w-4 h-4" />
             Diamantes
           </TabsTrigger>

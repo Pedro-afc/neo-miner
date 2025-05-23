@@ -21,7 +21,7 @@ const Navbar = ({ activeTab, setActiveTab }: NavbarProps) => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-black/50 backdrop-blur-lg border-t border-white/10 z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-black/70 backdrop-blur-lg border-t border-white/10 z-50">
       <TabsList className="grid w-full grid-cols-5 bg-transparent h-16 p-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;

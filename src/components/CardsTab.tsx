@@ -1,8 +1,10 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Coins, Clock, TrendingUp, Zap, Shield, Gem, Heart, Rocket, Bolt, Sword, Target } from 'lucide-react';
+import { toast } from "@/components/ui/use-toast";
 
 interface GameState {
   coins: number;
@@ -132,6 +134,22 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
     }
   ]);
 
+  // Effect to update cooldowns in real-time
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCards(prevCards => 
+        prevCards.map(card => {
+          if (card.cooldownEnd && card.cooldownEnd <= Date.now()) {
+            return { ...card, cooldownEnd: undefined };
+          }
+          return card;
+        })
+      );
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   const upgradeCard = (cardId: string) => {
     setCards(prevCards => 
       prevCards.map(card => {
@@ -140,7 +158,13 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
           setCoins(prev => prev - card.currentPrice);
           
           // Add experience bonus
-          setExperience(prev => prev + card.expBonus * 1000);
+          const expGained = card.expBonus * 1000;
+          setExperience(prev => prev + expGained);
+          
+          toast({
+            description: `¡${card.name} mejorada a nivel ${card.level + 1}! +${expGained.toLocaleString()} EXP`,
+            variant: "default",
+          });
           
           // Calculate new price (150% increase)
           const newPrice = Math.floor(card.currentPrice * 1.5);
@@ -216,12 +240,12 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold text-white">{card.name}</h3>
-                    <p className="text-xs text-gray-200">{card.description}</p>
+                    <p className="text-xs text-white">{card.description}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs bg-white/20 px-2 py-1 rounded text-white">
                         Nivel {card.level}
                       </span>
-                      <span className="text-xs text-green-400">
+                      <span className="text-xs text-green-300">
                         +{card.expBonus}% EXP
                       </span>
                     </div>
@@ -237,7 +261,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
                   {isOnCooldown ? (
                     <div className="text-center">
                       <Clock className="w-4 h-4 mx-auto text-orange-400 mb-1" />
-                      <p className="text-xs text-orange-400">{formatTime(remainingTime)}</p>
+                      <p className="text-xs text-orange-300">{formatTime(remainingTime)}</p>
                     </div>
                   ) : (
                     <Button
