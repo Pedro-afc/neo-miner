@@ -7,9 +7,12 @@ import RewardsTab from '@/components/RewardsTab';
 import ShopTab from '@/components/ShopTab';
 import AirdropTab from '@/components/AirdropTab';
 import Navbar from '@/components/Navbar';
-import { Home, CreditCard, Gift, ShoppingBag, Plane } from 'lucide-react';
+import UserProfile from '@/components/UserProfile';
+import TelegramLogin from '@/components/TelegramLogin';
+import { useTelegramAuth } from '@/hooks/useTelegramAuth';
 
 const Index = () => {
+  const { user, isLoading, isAuthenticated, logout } = useTelegramAuth();
   const [activeTab, setActiveTab] = useState('home');
   const [coins, setCoins] = useState(0);
   const [diamonds, setDiamonds] = useState(10);
@@ -37,6 +40,24 @@ const Index = () => {
     experienceRequired
   };
 
+  const handleLogin = () => {
+    // The useTelegramAuth hook handles the login automatically
+    // This function exists for cases where manual login might be needed
+    window.location.reload();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-white text-xl">Cargando...</div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return <TelegramLogin onLogin={handleLogin} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
       {/* Background effects */}
@@ -45,6 +66,8 @@ const Index = () => {
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-h-screen pb-20">
         <div className="container mx-auto px-4 pt-6">
+          <UserProfile user={user} onLogout={logout} />
+          
           <TabsContent value="home" className="mt-0">
             <GameScreen gameState={gameState} />
           </TabsContent>
