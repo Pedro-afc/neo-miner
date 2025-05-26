@@ -32,7 +32,6 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
     
     // Add coins and experience
     setCoins(prev => prev + clickPower);
-    // Aumenta la experiencia en 1 con cada click (antes era clickPower * 100)
     setExperience(prev => prev + 1);
     
     // Add click effect
@@ -55,8 +54,8 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
           <div className="flex items-center gap-2">
             <Coins className="w-5 h-5 text-yellow-400" />
             <div>
-              <p className="text-xs text-yellow-300">Monedas</p>
-              <p className="text-lg font-bold text-yellow-100">{coins.toLocaleString()}</p>
+              <p className="text-xs text-black font-medium">Coins</p>
+              <p className="text-lg font-bold text-black">{coins.toLocaleString()}</p>
             </div>
           </div>
         </Card>
@@ -65,8 +64,8 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
           <div className="flex items-center gap-2">
             <Diamond className="w-5 h-5 text-blue-400" />
             <div>
-              <p className="text-xs text-blue-300">Diamantes</p>
-              <p className="text-lg font-bold text-blue-100">{diamonds.toLocaleString()}</p>
+              <p className="text-xs text-black font-medium">Diamonds</p>
+              <p className="text-lg font-bold text-black">{diamonds.toLocaleString()}</p>
             </div>
           </div>
         </Card>
@@ -76,8 +75,8 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
       <Card className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 p-4">
         <div className="space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-purple-300">Nivel {level}</span>
-            <span className="text-xs text-purple-300">{experience.toLocaleString()} / {experienceRequired.toLocaleString()}</span>
+            <span className="text-sm text-black font-medium">Level {level}</span>
+            <span className="text-xs text-black font-medium">{experience.toLocaleString()} / {experienceRequired.toLocaleString()}</span>
           </div>
           <Progress value={experiencePercentage} className="h-2 bg-purple-900/50" />
         </div>
@@ -111,8 +110,8 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
         </Button>
         
         <div className="text-center">
-          <p className="text-lg font-bold text-yellow-300">Poder de Click: {clickPower}</p>
-          <p className="text-sm text-gray-300">¡Toca para ganar monedas!</p>
+          <p className="text-lg font-bold text-yellow-300">Click Power: {clickPower}</p>
+          <p className="text-sm text-gray-300">Tap to earn coins!</p>
         </div>
       </div>
 
@@ -128,7 +127,7 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
         </div>
         <div className="bg-white/10 rounded-lg p-2">
           <p className="text-gray-400">Auto-Click</p>
-          <p className="font-bold text-white">0/seg</p>
+          <p className="font-bold text-white">0/sec</p>
         </div>
       </div>
     </div>

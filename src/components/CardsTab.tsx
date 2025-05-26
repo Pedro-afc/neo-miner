@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -206,7 +207,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         <h2 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">
           Upgrade Cards
         </h2>
-        <p className="text-black text-sm mt-1">Upgrade your cards to increase your progress</p>
+        <p className="text-white text-sm mt-1">Upgrade your cards to increase your progress</p>
       </div>
 
       <div className="space-y-4">
