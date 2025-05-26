@@ -9,10 +9,10 @@ interface NavbarProps {
 
 const Navbar = ({ activeTab, setActiveTab }: NavbarProps) => {
   const tabs = [
-    { id: 'home', icon: Home, label: 'Inicio' },
-    { id: 'cards', icon: CreditCard, label: 'Cartas' },
-    { id: 'rewards', icon: Gift, label: 'Recompensas' },
-    { id: 'shop', icon: ShoppingBag, label: 'Tienda' },
+    { id: 'home', icon: Home, label: 'Home' },
+    { id: 'cards', icon: CreditCard, label: 'Cards' },
+    { id: 'rewards', icon: Gift, label: 'Rewards' },
+    { id: 'shop', icon: ShoppingBag, label: 'Shop' },
     { id: 'airdrop', icon: Plane, label: 'Airdrop' },
   ];
 
