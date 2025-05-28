@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Gift, Calendar, Coins, Diamond, Star, Clock } from 'lucide-react';
+import { Gift, Calendar, Coins, Diamond, Star, Clock, CheckCircle } from 'lucide-react';
+import { toast } from "@/hooks/use-toast";
 
 interface GameState {
   coins: number;
@@ -94,12 +95,24 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
     switch (reward.type) {
       case 'coins':
         setCoins(prev => prev + reward.amount);
+        toast({
+          description: `¡+${reward.amount.toLocaleString()} monedas reclamadas!`,
+          variant: "default",
+        });
         break;
       case 'diamonds':
         setDiamonds(prev => prev + reward.amount);
+        toast({
+          description: `¡+${reward.amount} diamantes reclamados!`,
+          variant: "default",
+        });
         break;
       case 'experience':
         setExperience(prev => prev + reward.amount);
+        toast({
+          description: `¡+${reward.amount.toLocaleString()} experiencia reclamada!`,
+          variant: "default",
+        });
         break;
     }
 
@@ -114,49 +127,56 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
     setCurrentDay(prev => (prev % 7) + 1);
   };
 
-  const getRewardIcon = (type: string) => {
-    switch (type) {
-      case 'coins':
-        return <Coins className="w-5 h-5 text-yellow-400" />;
-      case 'diamonds':
-        return <Diamond className="w-5 h-5 text-blue-400" />;
-      case 'experience':
-        return <Star className="w-5 h-5 text-purple-400" />;
-      default:
-        return <Gift className="w-5 h-5" />;
+  const claimUpgradeReward = (rewardId: string) => {
+    const reward = upgradeRewards.find(r => r.id === rewardId);
+    if (!reward || reward.claimed || level < reward.triggerLevel) return;
+
+    // Give reward
+    if (reward.type === 'coins') {
+      setCoins(prev => prev + reward.amount);
+      toast({
+        description: `¡${reward.name}! +${reward.amount.toLocaleString()} monedas`,
+        variant: "default",
+      });
+    } else {
+      setDiamonds(prev => prev + reward.amount);
+      toast({
+        description: `¡${reward.name}! +${reward.amount} diamantes`,
+        variant: "default",
+      });
     }
   };
 
-  const getRewardColor = (type: string) => {
+  const getRewardIcon = (type: string) => {
     switch (type) {
       case 'coins':
-        return 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30';
+        return <Coins className="w-6 h-6 text-yellow-400 drop-shadow-lg" />;
       case 'diamonds':
-        return 'from-blue-500/20 to-cyan-500/20 border-blue-500/30';
+        return <Diamond className="w-6 h-6 text-blue-400 drop-shadow-lg" />;
       case 'experience':
-        return 'from-purple-500/20 to-pink-500/20 border-purple-500/30';
+        return <Star className="w-6 h-6 text-purple-400 drop-shadow-lg" />;
       default:
-        return 'from-gray-500/20 to-gray-600/20 border-gray-500/30';
+        return <Gift className="w-6 h-6 text-white" />;
     }
   };
 
   return (
-    <div className="space-y-6 max-w-md mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto pb-20">
       <div className="text-center">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent drop-shadow-lg">
           Recompensas
         </h2>
-        <p className="text-gray-300 text-sm mt-1">Recoge tus recompensas diarias y de progreso</p>
+        <p className="text-white text-base mt-2 font-semibold drop-shadow-md">Recoge tus recompensas diarias y de progreso</p>
       </div>
 
-      {/* Daily Login Rewards */}
+      {/* Daily Login Rewards - Grid Design */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-green-400" />
-          <h3 className="text-lg font-bold text-white">Recompensas Diarias</h3>
+        <div className="flex items-center gap-3 justify-center">
+          <Calendar className="w-6 h-6 text-green-400 drop-shadow-lg" />
+          <h3 className="text-xl font-bold text-white drop-shadow-lg">Recompensas Diarias</h3>
         </div>
 
-        <div className="grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {dailyRewards.map((reward) => {
             const isToday = reward.day === currentDay;
             const canClaim = isToday && canClaimDaily() && !reward.claimed;
@@ -164,48 +184,53 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
             return (
               <Card 
                 key={reward.day}
-                className={`bg-gradient-to-r ${getRewardColor(reward.type)} p-4 ${
-                  isToday ? 'ring-2 ring-green-400 ring-opacity-50' : ''
-                }`}
+                className={`bg-gray-900/80 backdrop-blur-sm border-2 p-4 relative overflow-hidden ${
+                  isToday ? 'border-green-400 ring-2 ring-green-400/50' : 'border-gray-600'
+                } ${reward.claimed ? 'opacity-75' : ''}`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-white/10">
+                <div className="text-center space-y-3">
+                  <div className="flex justify-center">
+                    <div className={`p-3 rounded-full ${
+                      reward.type === 'coins' ? 'bg-yellow-500/20' :
+                      reward.type === 'diamonds' ? 'bg-blue-500/20' : 'bg-purple-500/20'
+                    }`}>
                       {getRewardIcon(reward.type)}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-white">Día {reward.day}</h4>
-                        {isToday && (
-                          <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30">
-                            Hoy
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-300">
-                        {reward.amount.toLocaleString()} {reward.type === 'coins' ? 'monedas' : 
-                         reward.type === 'diamonds' ? 'diamantes' : 'experiencia'}
-                      </p>
                     </div>
                   </div>
                   
+                  <div>
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <h4 className="font-bold text-white text-lg drop-shadow-md">Día {reward.day}</h4>
+                      {isToday && (
+                        <Badge className="bg-green-500 text-white border-0 text-xs font-bold">
+                          HOY
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-200 font-semibold drop-shadow-sm">
+                      {reward.amount.toLocaleString()} {reward.type === 'coins' ? 'monedas' : 
+                       reward.type === 'diamonds' ? 'diamantes' : 'exp'}
+                    </p>
+                  </div>
+                  
                   {reward.claimed ? (
-                    <Badge variant="secondary" className="bg-gray-500/20 text-gray-400">
-                      Reclamado
-                    </Badge>
+                    <div className="flex items-center justify-center gap-1">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      <span className="text-xs text-green-400 font-bold">RECLAMADO</span>
+                    </div>
                   ) : canClaim ? (
                     <Button
                       onClick={() => claimDailyReward(reward.day)}
                       size="sm"
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400"
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white font-bold border-0"
                     >
                       <Gift className="w-4 h-4 mr-1" />
-                      Reclamar
+                      RECLAMAR
                     </Button>
                   ) : (
                     <div className="text-center">
-                      <Clock className="w-4 h-4 mx-auto text-gray-400 mb-1" />
-                      <p className="text-xs text-gray-400">Esperar</p>
+                      <Clock className="w-5 h-5 mx-auto text-gray-400 mb-1" />
+                      <p className="text-xs text-gray-400 font-medium">Esperar</p>
                     </div>
                   )}
                 </div>
@@ -217,12 +242,12 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
 
       {/* Upgrade Rewards */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Star className="w-5 h-5 text-purple-400" />
-          <h3 className="text-lg font-bold text-white">Recompensas de Progreso</h3>
+        <div className="flex items-center gap-3 justify-center">
+          <Star className="w-6 h-6 text-purple-400 drop-shadow-lg" />
+          <h3 className="text-xl font-bold text-white drop-shadow-lg">Recompensas de Progreso</h3>
         </div>
 
-        <div className="grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-1 gap-4">
           {upgradeRewards.map((reward) => {
             const canClaim = level >= reward.triggerLevel && !reward.claimed;
             const isLocked = level < reward.triggerLevel;
@@ -230,38 +255,41 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
             return (
               <Card 
                 key={reward.id}
-                className={`bg-gradient-to-r ${getRewardColor(reward.type)} p-4 ${
-                  isLocked ? 'opacity-50' : ''
+                className={`bg-gray-900/80 backdrop-blur-sm border-2 border-gray-600 p-4 ${
+                  isLocked ? 'opacity-60' : ''
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-white/10">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-lg ${
+                      reward.type === 'coins' ? 'bg-yellow-500/20' : 'bg-blue-500/20'
+                    }`}>
                       {getRewardIcon(reward.type)}
                     </div>
                     <div>
-                      <h4 className="font-bold text-white">{reward.name}</h4>
-                      <p className="text-xs text-gray-300">{reward.description}</p>
-                      <p className="text-sm text-gray-300">
+                      <h4 className="font-bold text-white text-lg drop-shadow-md">{reward.name}</h4>
+                      <p className="text-sm text-gray-300 drop-shadow-sm">{reward.description}</p>
+                      <p className="text-base text-gray-200 font-semibold drop-shadow-sm">
                         {reward.amount.toLocaleString()} {reward.type === 'coins' ? 'monedas' : 'diamantes'}
                       </p>
                     </div>
                   </div>
                   
                   {reward.claimed ? (
-                    <Badge variant="secondary" className="bg-gray-500/20 text-gray-400">
+                    <Badge className="bg-gray-600 text-gray-300 border-0">
                       Reclamado
                     </Badge>
                   ) : canClaim ? (
                     <Button
+                      onClick={() => claimUpgradeReward(reward.id)}
                       size="sm"
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400"
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-bold border-0"
                     >
                       <Gift className="w-4 h-4 mr-1" />
                       Reclamar
                     </Button>
                   ) : (
-                    <Badge variant="outline" className="border-gray-500/30 text-gray-400">
+                    <Badge variant="outline" className="border-gray-500 text-gray-400 bg-gray-800/50">
                       Nivel {reward.triggerLevel}
                     </Badge>
                   )}

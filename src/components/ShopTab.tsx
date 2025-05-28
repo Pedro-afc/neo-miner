@@ -1,9 +1,10 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award, Sparkles, Gem, Globe, Clock } from 'lucide-react';
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 interface GameState {
   coins: number;
@@ -30,9 +31,9 @@ interface ShopItem {
 
 const ShopTab = ({ gameState }: { gameState: GameState }) => {
   const { coins, setCoins, diamonds, setDiamonds, setExperience } = gameState;
-  const [activeSection, setActiveSection] = useState<string>('coins');
+  const [activeSection, setActiveSection] = useState<'coins' | 'diamonds'>('coins');
   
-  const [shopItems] = useState<ShopItem[]>([
+  const shopItems: ShopItem[] = [
     {
       id: 'click_boost',
       name: 'Boost de Click',
@@ -173,7 +174,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       rarity: 'rare',
       effect: '-75% Cooldowns'
     }
-  ]);
+  ];
 
   const buyItem = (item: ShopItem) => {
     const canAfford = item.currency === 'coins' ? coins >= item.price : diamonds >= item.price;
@@ -240,34 +241,34 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
       case 'common':
-        return 'from-gray-300 to-gray-400 border-gray-500/30';
+        return 'from-gray-800 to-gray-700 border-gray-500';
       case 'rare':
-        return 'from-blue-300 to-cyan-300 border-blue-500/30';
+        return 'from-blue-800 to-blue-700 border-blue-400';
       case 'epic':
-        return 'from-purple-300 to-pink-300 border-purple-500/30';
+        return 'from-purple-800 to-purple-700 border-purple-400';
       case 'legendary':
-        return 'from-yellow-300 to-orange-300 border-yellow-500/30';
+        return 'from-yellow-800 to-orange-700 border-yellow-400';
       case 'mythic':
-        return 'from-red-300 to-rose-300 border-red-500/30';
+        return 'from-red-800 to-pink-700 border-red-400';
       default:
-        return 'from-gray-300 to-gray-400 border-gray-500/30';
+        return 'from-gray-800 to-gray-700 border-gray-500';
     }
   };
 
   const getRarityBadgeColor = (rarity: string) => {
     switch (rarity) {
       case 'common':
-        return 'bg-gray-500/20 text-black border-gray-500/30';
+        return 'bg-gray-600 text-white border-0';
       case 'rare':
-        return 'bg-blue-500/20 text-black border-blue-500/30';
+        return 'bg-blue-600 text-white border-0';
       case 'epic':
-        return 'bg-purple-500/20 text-black border-purple-500/30';
+        return 'bg-purple-600 text-white border-0';
       case 'legendary':
-        return 'bg-yellow-500/20 text-black border-yellow-500/30';
+        return 'bg-yellow-600 text-white border-0';
       case 'mythic':
-        return 'bg-red-500/20 text-black border-red-500/30';
+        return 'bg-red-600 text-white border-0';
       default:
-        return 'bg-gray-500/20 text-black border-gray-500/30';
+        return 'bg-gray-600 text-white border-0';
     }
   };
 
@@ -281,33 +282,33 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         const canAfford = item.currency === 'coins' ? coins >= item.price : diamonds >= item.price;
         
         return (
-          <Card key={item.id} className={`bg-gradient-to-r ${getRarityColor(item.rarity)} p-4`}>
+          <Card key={item.id} className={`bg-gradient-to-r ${getRarityColor(item.rarity)} p-4 border-2 backdrop-blur-sm`}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-white/30">
-                  <Icon className="w-6 h-6 text-black" />
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-white/20 backdrop-blur-sm">
+                  <Icon className="w-6 h-6 text-white drop-shadow-lg" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-black">{item.name}</h3>
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="font-bold text-white text-lg drop-shadow-md">{item.name}</h3>
                     <Badge className={getRarityBadgeColor(item.rarity)}>
-                      {item.rarity}
+                      {item.rarity.toUpperCase()}
                     </Badge>
                   </div>
-                  <p className="text-sm text-black mb-1">{item.description}</p>
-                  <p className="text-xs text-green-800 font-medium">{item.effect}</p>
+                  <p className="text-sm text-gray-200 mb-2 drop-shadow-sm">{item.description}</p>
+                  <p className="text-sm text-green-300 font-bold drop-shadow-sm">{item.effect}</p>
                 </div>
               </div>
               
-              <div className="text-right">
-                <div className={`flex items-center gap-1 mb-3 ${
-                  item.currency === 'coins' ? 'text-yellow-700' : 'text-blue-700'
+              <div className="text-right flex flex-col items-end gap-3">
+                <div className={`flex items-center gap-2 ${
+                  item.currency === 'coins' ? 'text-yellow-300' : 'text-blue-300'
                 }`}>
                   {item.currency === 'coins' ? 
-                    <Coins className="w-4 h-4" /> : 
-                    <Diamond className="w-4 h-4" />
+                    <Coins className="w-5 h-5 drop-shadow-lg" /> : 
+                    <Diamond className="w-5 h-5 drop-shadow-lg" />
                   }
-                  <span className="font-bold">{item.price.toLocaleString()}</span>
+                  <span className="font-bold text-lg drop-shadow-md">{item.price.toLocaleString()}</span>
                 </div>
                 
                 <Button
@@ -316,12 +317,12 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
                   size="sm"
                   className={`${
                     canAfford 
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400' 
-                      : 'bg-gray-600 cursor-not-allowed'
-                  } text-white font-bold`}
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0' 
+                      : 'bg-gray-700 cursor-not-allowed border-0'
+                  } text-white font-bold px-4 py-2`}
                 >
-                  <ShoppingBag className="w-4 h-4 mr-1" />
-                  Comprar
+                  <ShoppingBag className="w-4 h-4 mr-2" />
+                  COMPRAR
                 </Button>
               </div>
             </div>
@@ -332,39 +333,39 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
   );
 
   return (
-    <div className="space-y-6 max-w-md mx-auto pb-20">
+    <div className="space-y-6 max-w-4xl mx-auto pb-20">
       <div className="text-center">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent drop-shadow-lg">
           Tienda
         </h2>
-        <p className="text-gray-800 text-sm mt-1">Mejora tu experiencia de juego</p>
+        <p className="text-white text-base mt-2 font-semibold drop-shadow-md">Mejora tu experiencia de juego</p>
       </div>
 
-      {/* Custom Toggle Navigation */}
-      <div className="flex space-x-2 bg-black/30 p-1 rounded-lg">
+      {/* Navigation Tabs */}
+      <div className="flex space-x-1 bg-gray-900/80 p-1 rounded-xl backdrop-blur-sm border border-gray-600">
         <Button
           onClick={() => setActiveSection('coins')}
-          variant={activeSection === 'coins' ? 'default' : 'ghost'}
-          className={`flex-1 flex items-center gap-2 ${
+          variant="ghost"
+          className={`flex-1 flex items-center justify-center gap-2 rounded-lg transition-all duration-200 ${
             activeSection === 'coins' 
-              ? 'bg-yellow-800/50 text-white' 
-              : 'text-white hover:bg-white/10'
+              ? 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-lg' 
+              : 'text-gray-300 hover:bg-gray-700 hover:text-white'
           }`}
         >
-          <Coins className="w-4 h-4" />
-          Monedas
+          <Coins className="w-5 h-5" />
+          <span className="font-bold">MONEDAS</span>
         </Button>
         <Button
           onClick={() => setActiveSection('diamonds')}
-          variant={activeSection === 'diamonds' ? 'default' : 'ghost'}
-          className={`flex-1 flex items-center gap-2 ${
+          variant="ghost"
+          className={`flex-1 flex items-center justify-center gap-2 rounded-lg transition-all duration-200 ${
             activeSection === 'diamonds' 
-              ? 'bg-blue-800/50 text-white' 
-              : 'text-white hover:bg-white/10'
+              ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg' 
+              : 'text-gray-300 hover:bg-gray-700 hover:text-white'
           }`}
         >
-          <Diamond className="w-4 h-4" />
-          Diamantes
+          <Diamond className="w-5 h-5" />
+          <span className="font-bold">DIAMANTES</span>
         </Button>
       </div>
 
@@ -375,21 +376,25 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       </div>
 
       {/* Current Balance */}
-      <Card className="bg-gradient-to-r from-indigo-300 to-purple-300 border-indigo-500/30 p-4">
-        <h3 className="text-lg font-bold text-black mb-3">Tu Balance</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-2">
-            <Coins className="w-5 h-5 text-yellow-700" />
+      <Card className="bg-gray-900/80 backdrop-blur-sm border-2 border-gray-600 p-6">
+        <h3 className="text-xl font-bold text-white mb-4 drop-shadow-md">Tu Balance</h3>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-yellow-500/20">
+              <Coins className="w-6 h-6 text-yellow-400 drop-shadow-lg" />
+            </div>
             <div>
-              <p className="text-xs text-yellow-800">Monedas</p>
-              <p className="text-lg font-bold text-yellow-900">{coins.toLocaleString()}</p>
+              <p className="text-sm text-gray-300 font-medium">Monedas</p>
+              <p className="text-2xl font-bold text-yellow-400 drop-shadow-md">{coins.toLocaleString()}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Diamond className="w-5 h-5 text-blue-700" />
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-blue-500/20">
+              <Diamond className="w-6 h-6 text-blue-400 drop-shadow-lg" />
+            </div>
             <div>
-              <p className="text-xs text-blue-800">Diamantes</p>
-              <p className="text-lg font-bold text-blue-900">{diamonds.toLocaleString()}</p>
+              <p className="text-sm text-gray-300 font-medium">Diamantes</p>
+              <p className="text-2xl font-bold text-blue-400 drop-shadow-md">{diamonds.toLocaleString()}</p>
             </div>
           </div>
         </div>
