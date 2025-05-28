@@ -1,9 +1,7 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award, Sparkles, Gem, Globe, Clock } from 'lucide-react';
 import { toast } from "@/components/ui/use-toast";
 
@@ -32,10 +30,9 @@ interface ShopItem {
 
 const ShopTab = ({ gameState }: { gameState: GameState }) => {
   const { coins, setCoins, diamonds, setDiamonds, setExperience } = gameState;
-  const [activeTab, setActiveTab] = useState<string>('coins');
+  const [activeSection, setActiveSection] = useState<string>('coins');
   
   const [shopItems] = useState<ShopItem[]>([
-    // Coins section
     {
       id: 'click_boost',
       name: 'Boost de Click',
@@ -86,8 +83,6 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       rarity: 'rare',
       effect: '+50% Crítico'
     },
-    
-    // Diamonds section
     {
       id: 'premium_boost',
       name: 'Boost Premium',
@@ -138,7 +133,6 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       rarity: 'legendary',
       effect: '+300% Daily Rewards'
     },
-    // Nuevos items para la sección de diamantes
     {
       id: 'cosmic_sparkle',
       name: 'Destello Cósmico',
@@ -191,14 +185,12 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       return;
     }
 
-    // Deduct currency
     if (item.currency === 'coins') {
       setCoins(prev => prev - item.price);
     } else {
       setDiamonds(prev => prev - item.price);
     }
 
-    // Apply item effect (simplified for demo)
     switch (item.id) {
       case 'exp_boost':
         setExperience(prev => prev + 100000);
@@ -237,7 +229,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         });
         break;
       default:
-        setCoins(prev => prev + 10000); // Default reward
+        setCoins(prev => prev + 10000);
         toast({
           description: "¡Item adquirido! +10,000 Monedas",
           variant: "default",
@@ -348,32 +340,39 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         <p className="text-gray-800 text-sm mt-1">Mejora tu experiencia de juego</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-black/30">
-          <TabsTrigger 
-            value="coins" 
-            className="flex items-center gap-2 text-white data-[state=active]:bg-yellow-800/30"
-          >
-            <Coins className="w-4 h-4" />
-            Monedas
-          </TabsTrigger>
-          <TabsTrigger 
-            value="diamonds" 
-            className="flex items-center gap-2 text-white data-[state=active]:bg-blue-800/30"
-          >
-            <Diamond className="w-4 h-4" />
-            Diamantes
-          </TabsTrigger>
-        </TabsList>
+      {/* Custom Toggle Navigation */}
+      <div className="flex space-x-2 bg-black/30 p-1 rounded-lg">
+        <Button
+          onClick={() => setActiveSection('coins')}
+          variant={activeSection === 'coins' ? 'default' : 'ghost'}
+          className={`flex-1 flex items-center gap-2 ${
+            activeSection === 'coins' 
+              ? 'bg-yellow-800/50 text-white' 
+              : 'text-white hover:bg-white/10'
+          }`}
+        >
+          <Coins className="w-4 h-4" />
+          Monedas
+        </Button>
+        <Button
+          onClick={() => setActiveSection('diamonds')}
+          variant={activeSection === 'diamonds' ? 'default' : 'ghost'}
+          className={`flex-1 flex items-center gap-2 ${
+            activeSection === 'diamonds' 
+              ? 'bg-blue-800/50 text-white' 
+              : 'text-white hover:bg-white/10'
+          }`}
+        >
+          <Diamond className="w-4 h-4" />
+          Diamantes
+        </Button>
+      </div>
 
-        <TabsContent value="coins" className="mt-6">
-          {renderShopItems(coinsItems)}
-        </TabsContent>
-
-        <TabsContent value="diamonds" className="mt-6">
-          {renderShopItems(diamondsItems)}
-        </TabsContent>
-      </Tabs>
+      {/* Content based on active section */}
+      <div className="mt-6">
+        {activeSection === 'coins' && renderShopItems(coinsItems)}
+        {activeSection === 'diamonds' && renderShopItems(diamondsItems)}
+      </div>
 
       {/* Current Balance */}
       <Card className="bg-gradient-to-r from-indigo-300 to-purple-300 border-indigo-500/30 p-4">
