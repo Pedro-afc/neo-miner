@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { Coins, Diamond, Zap } from 'lucide-react';
+import { loadGameData, saveGameData } from '@/utils/gameUtils';
 
 interface GameState {
   coins: number;
@@ -24,6 +25,39 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
   const { coins, setCoins, diamonds, level, experience, setExperience, experienceRequired } = gameState;
   const [clickPower, setClickPower] = useState(1);
   const [clickEffects, setClickEffects] = useState<Array<{ id: number; x: number; y: number }>>([]);
+  const [autoClickPower, setAutoClickPower] = useState(() => loadGameData('autoClickPower', 0));
+  const [totalClicks, setTotalClicks] = useState(() => loadGameData('totalClicks', 0));
+  const [clicksPerMinute, setClicksPerMinute] = useState(0);
+  const [clickTimes, setClickTimes] = useState<number[]>([]);
+
+  // Auto-click functionality
+  useEffect(() => {
+    if (autoClickPower <= 0) return;
+
+    const interval = setInterval(() => {
+      setCoins(prev => prev + autoClickPower);
+      setExperience(prev => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [autoClickPower, setCoins, setExperience]);
+
+  // Load auto-click power from localStorage periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const savedAutoClick = loadGameData('autoClickPower', 0);
+      setAutoClickPower(savedAutoClick);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Calculate clicks per minute
+  useEffect(() => {
+    const now = Date.now();
+    const recentClicks = clickTimes.filter(time => now - time < 60000);
+    setClicksPerMinute(recentClicks.length);
+  }, [clickTimes]);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -33,6 +67,14 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
     // Add coins and experience
     setCoins(prev => prev + clickPower);
     setExperience(prev => prev + 1);
+    
+    // Update click tracking
+    const newTotalClicks = totalClicks + 1;
+    setTotalClicks(newTotalClicks);
+    saveGameData('totalClicks', newTotalClicks);
+    
+    const now = Date.now();
+    setClickTimes(prev => [...prev.slice(-59), now]);
     
     // Add click effect
     const effectId = Date.now();
@@ -112,6 +154,9 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
         <div className="text-center">
           <p className="text-lg font-bold text-yellow-300">Click Power: {clickPower}</p>
           <p className="text-sm text-gray-300">Tap to earn coins!</p>
+          {autoClickPower > 0 && (
+            <p className="text-sm text-green-300 mt-1">Auto-Mining: +{autoClickPower}/sec</p>
+          )}
         </div>
       </div>
 
@@ -119,15 +164,15 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
       <div className="grid grid-cols-3 gap-2 text-center text-sm">
         <div className="bg-white/10 rounded-lg p-2">
           <p className="text-gray-400">Clicks/Min</p>
-          <p className="font-bold text-white">0</p>
+          <p className="font-bold text-white">{clicksPerMinute}</p>
         </div>
         <div className="bg-white/10 rounded-lg p-2">
           <p className="text-gray-400">Total Clicks</p>
-          <p className="font-bold text-white">0</p>
+          <p className="font-bold text-white">{totalClicks.toLocaleString()}</p>
         </div>
         <div className="bg-white/10 rounded-lg p-2">
           <p className="text-gray-400">Auto-Click</p>
-          <p className="font-bold text-white">0/sec</p>
+          <p className="font-bold text-white">{autoClickPower}/sec</p>
         </div>
       </div>
     </div>

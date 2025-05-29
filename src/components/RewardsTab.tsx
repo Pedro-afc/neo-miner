@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Gift, Calendar, Coins, Diamond, Star, Clock, CheckCircle, TrendingUp } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
+import { saveGameData, loadGameData } from '@/utils/gameUtils';
 
 interface GameState {
   coins: number;
@@ -33,15 +34,16 @@ interface UpgradeReward {
   triggerLevel?: number;
   triggerUpgrades?: number;
   claimed: boolean;
+  claimedAt?: number;
 }
 
 const RewardsTab = ({ gameState }: { gameState: GameState }) => {
   const { coins, setCoins, diamonds, setDiamonds, level, setExperience } = gameState;
   
-  // Load persistent data from localStorage
+  // Load daily rewards data with proper persistence
   const [dailyRewards, setDailyRewards] = useState<DailyReward[]>(() => {
-    const saved = localStorage.getItem('dailyRewards');
-    return saved ? JSON.parse(saved) : [
+    const saved = loadGameData('dailyRewards', null);
+    return saved || [
       { day: 1, type: 'coins', amount: 1000, claimed: false },
       { day: 2, type: 'coins', amount: 2000, claimed: false },
       { day: 3, type: 'diamonds', amount: 5, claimed: false },
@@ -53,139 +55,168 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
   });
 
   const [currentDay, setCurrentDay] = useState(() => {
-    return parseInt(localStorage.getItem('currentDay') || '1');
+    return loadGameData('currentDay', 1);
   });
 
   const [lastClaimDate, setLastClaimDate] = useState<string | null>(() => {
-    return localStorage.getItem('lastClaimDate');
+    return loadGameData('lastClaimDate', null);
   });
 
   const [claimedUpgradeRewards, setClaimedUpgradeRewards] = useState<string[]>(() => {
-    const saved = localStorage.getItem('claimedUpgradeRewards');
-    return saved ? JSON.parse(saved) : [];
+    return loadGameData('claimedUpgradeRewards', []);
+  });
+
+  const [upgradeRewardCooldowns, setUpgradeRewardCooldowns] = useState<Record<string, number>>(() => {
+    return loadGameData('upgradeRewardCooldowns', {});
   });
 
   // Get current upgrade count
   const currentUpgrades = parseInt(localStorage.getItem('cardUpgrades') || '0');
 
   const upgradeRewards: UpgradeReward[] = [
-    // Level-based rewards
+    // Level-based rewards (x2 multiplier)
     {
       id: 'level_2',
       name: 'Primer Nivel!',
       description: 'Alcanzaste el nivel 2',
       type: 'coins',
-      amount: 5000,
+      amount: 10000,
       triggerLevel: 2,
-      claimed: claimedUpgradeRewards.includes('level_2')
+      claimed: claimedUpgradeRewards.includes('level_2'),
+      claimedAt: upgradeRewardCooldowns['level_2']
     },
     {
       id: 'level_5',
       name: 'Subiendo Rápido',
       description: 'Alcanzaste el nivel 5',
       type: 'diamonds',
-      amount: 25,
+      amount: 50,
       triggerLevel: 5,
-      claimed: claimedUpgradeRewards.includes('level_5')
+      claimed: claimedUpgradeRewards.includes('level_5'),
+      claimedAt: upgradeRewardCooldowns['level_5']
     },
     {
       id: 'level_10',
       name: 'Maestro del Juego',
       description: 'Alcanzaste el nivel 10',
       type: 'coins',
-      amount: 50000,
+      amount: 100000,
       triggerLevel: 10,
-      claimed: claimedUpgradeRewards.includes('level_10')
+      claimed: claimedUpgradeRewards.includes('level_10'),
+      claimedAt: upgradeRewardCooldowns['level_10']
     },
     {
       id: 'level_15',
       name: 'Experto Avanzado',
       description: 'Alcanzaste el nivel 15',
       type: 'diamonds',
-      amount: 50,
+      amount: 100,
       triggerLevel: 15,
-      claimed: claimedUpgradeRewards.includes('level_15')
+      claimed: claimedUpgradeRewards.includes('level_15'),
+      claimedAt: upgradeRewardCooldowns['level_15']
     },
-    // Upgrade-based rewards
+    // Upgrade-based rewards (x2 multiplier)
     {
       id: 'upgrades_5',
       name: 'Primeras Mejoras',
-      description: 'Realizaste 5 mejoras de cartas',
+      description: 'Realizaste 10 mejoras de cartas',
       type: 'coins',
-      amount: 10000,
-      triggerUpgrades: 5,
-      claimed: claimedUpgradeRewards.includes('upgrades_5')
+      amount: 20000,
+      triggerUpgrades: 10,
+      claimed: claimedUpgradeRewards.includes('upgrades_5'),
+      claimedAt: upgradeRewardCooldowns['upgrades_5']
     },
     {
       id: 'upgrades_10',
       name: 'Mejorador Novato',
-      description: 'Realizaste 10 mejoras de cartas',
+      description: 'Realizaste 20 mejoras de cartas',
       type: 'diamonds',
-      amount: 15,
-      triggerUpgrades: 10,
-      claimed: claimedUpgradeRewards.includes('upgrades_10')
+      amount: 30,
+      triggerUpgrades: 20,
+      claimed: claimedUpgradeRewards.includes('upgrades_10'),
+      claimedAt: upgradeRewardCooldowns['upgrades_10']
     },
     {
       id: 'upgrades_25',
       name: 'Mejorador Experto',
-      description: 'Realizaste 25 mejoras de cartas',
+      description: 'Realizaste 50 mejoras de cartas',
       type: 'coins',
-      amount: 50000,
-      triggerUpgrades: 25,
-      claimed: claimedUpgradeRewards.includes('upgrades_25')
+      amount: 100000,
+      triggerUpgrades: 50,
+      claimed: claimedUpgradeRewards.includes('upgrades_25'),
+      claimedAt: upgradeRewardCooldowns['upgrades_25']
     },
     {
       id: 'upgrades_50',
       name: 'Maestro de Mejoras',
-      description: 'Realizaste 50 mejoras de cartas',
+      description: 'Realizaste 100 mejoras de cartas',
       type: 'diamonds',
-      amount: 75,
-      triggerUpgrades: 50,
-      claimed: claimedUpgradeRewards.includes('upgrades_50')
+      amount: 150,
+      triggerUpgrades: 100,
+      claimed: claimedUpgradeRewards.includes('upgrades_50'),
+      claimedAt: upgradeRewardCooldowns['upgrades_50']
     },
     {
       id: 'upgrades_100',
       name: 'Leyenda de Mejoras',
-      description: 'Realizaste 100 mejoras de cartas',
+      description: 'Realizaste 200 mejoras de cartas',
       type: 'coins',
-      amount: 200000,
-      triggerUpgrades: 100,
-      claimed: claimedUpgradeRewards.includes('upgrades_100')
+      amount: 400000,
+      triggerUpgrades: 200,
+      claimed: claimedUpgradeRewards.includes('upgrades_100'),
+      claimedAt: upgradeRewardCooldowns['upgrades_100']
     },
     {
       id: 'upgrades_250',
       name: 'Dios de las Mejoras',
-      description: 'Realizaste 250 mejoras de cartas',
+      description: 'Realizaste 500 mejoras de cartas',
       type: 'diamonds',
-      amount: 200,
-      triggerUpgrades: 250,
-      claimed: claimedUpgradeRewards.includes('upgrades_250')
+      amount: 400,
+      triggerUpgrades: 500,
+      claimed: claimedUpgradeRewards.includes('upgrades_250'),
+      claimedAt: upgradeRewardCooldowns['upgrades_250']
     }
   ];
 
   // Save data to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('dailyRewards', JSON.stringify(dailyRewards));
+    saveGameData('dailyRewards', dailyRewards);
   }, [dailyRewards]);
 
   useEffect(() => {
-    localStorage.setItem('currentDay', currentDay.toString());
+    saveGameData('currentDay', currentDay);
   }, [currentDay]);
 
   useEffect(() => {
-    if (lastClaimDate) {
-      localStorage.setItem('lastClaimDate', lastClaimDate);
-    }
+    saveGameData('lastClaimDate', lastClaimDate);
   }, [lastClaimDate]);
 
   useEffect(() => {
-    localStorage.setItem('claimedUpgradeRewards', JSON.stringify(claimedUpgradeRewards));
+    saveGameData('claimedUpgradeRewards', claimedUpgradeRewards);
   }, [claimedUpgradeRewards]);
+
+  useEffect(() => {
+    saveGameData('upgradeRewardCooldowns', upgradeRewardCooldowns);
+  }, [upgradeRewardCooldowns]);
 
   // Check if daily reward can be claimed
   const canClaimDaily = () => {
     const today = new Date().toDateString();
     return lastClaimDate !== today;
+  };
+
+  // Check if upgrade reward can be claimed (12 hour cooldown)
+  const canClaimUpgradeReward = (reward: UpgradeReward) => {
+    if (!reward.claimedAt) return true;
+    const twelveHours = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+    return Date.now() - reward.claimedAt >= twelveHours;
+  };
+
+  const getUpgradeRewardCooldownTime = (reward: UpgradeReward) => {
+    if (!reward.claimedAt) return 0;
+    const twelveHours = 12 * 60 * 60 * 1000;
+    const elapsed = Date.now() - reward.claimedAt;
+    return Math.max(0, twelveHours - elapsed);
   };
 
   const claimDailyReward = (day: number) => {
@@ -228,11 +259,21 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
     const today = new Date().toDateString();
     setLastClaimDate(today);
     setCurrentDay(prev => (prev % 7) + 1);
+
+    // Reset all daily rewards for next cycle
+    if (day === 7) {
+      setTimeout(() => {
+        setDailyRewards(prev =>
+          prev.map(r => ({ ...r, claimed: false }))
+        );
+        setCurrentDay(1);
+      }, 100);
+    }
   };
 
   const claimUpgradeReward = (rewardId: string) => {
     const reward = upgradeRewards.find(r => r.id === rewardId);
-    if (!reward || reward.claimed) return;
+    if (!reward || !canClaimUpgradeReward(reward)) return;
 
     // Check if requirements are met
     const levelRequirementMet = !reward.triggerLevel || level >= reward.triggerLevel;
@@ -255,8 +296,12 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
       });
     }
 
-    // Mark as claimed
+    // Mark as claimed and set cooldown
     setClaimedUpgradeRewards(prev => [...prev, rewardId]);
+    setUpgradeRewardCooldowns(prev => ({
+      ...prev,
+      [rewardId]: Date.now()
+    }));
   };
 
   const getRewardIcon = (type: string) => {
@@ -270,6 +315,12 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
       default:
         return <Gift className="w-6 h-6 text-white" />;
     }
+  };
+
+  const formatTime = (ms: number) => {
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${minutes}m`;
   };
 
   return (
@@ -379,15 +430,15 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
           {upgradeRewards.map((reward) => {
             const levelRequirementMet = !reward.triggerLevel || level >= reward.triggerLevel;
             const upgradeRequirementMet = !reward.triggerUpgrades || currentUpgrades >= reward.triggerUpgrades;
-            const canClaim = levelRequirementMet && upgradeRequirementMet && !reward.claimed;
-            const isLocked = !levelRequirementMet && !upgradeRequirementMet;
+            const requirementsMet = levelRequirementMet && upgradeRequirementMet;
+            const canClaim = requirementsMet && canClaimUpgradeReward(reward);
+            const onCooldown = reward.claimedAt && !canClaimUpgradeReward(reward);
+            const cooldownTime = getUpgradeRewardCooldownTime(reward);
             
             return (
               <Card 
                 key={reward.id}
-                className={`bg-gray-900/80 backdrop-blur-sm border-2 border-gray-600 p-4 ${
-                  isLocked ? 'opacity-60' : ''
-                }`}
+                className="bg-gray-900/80 backdrop-blur-sm border-2 border-gray-600 p-4"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
@@ -407,12 +458,17 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
                           Progreso: {Math.min(currentUpgrades, reward.triggerUpgrades)}/{reward.triggerUpgrades} mejoras
                         </p>
                       )}
+                      {onCooldown && (
+                        <p className="text-xs text-orange-300 mt-1">
+                          Cooldown: {formatTime(cooldownTime)}
+                        </p>
+                      )}
                     </div>
                   </div>
                   
-                  {reward.claimed ? (
-                    <Badge className="bg-gray-600 text-gray-300 border-0">
-                      Reclamado
+                  {onCooldown ? (
+                    <Badge className="bg-orange-600 text-orange-100 border-0">
+                      En Espera
                     </Badge>
                   ) : canClaim ? (
                     <Button
