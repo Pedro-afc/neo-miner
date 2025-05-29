@@ -1,8 +1,9 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award, Sparkles, Gem, Globe, Clock, Wallet } from 'lucide-react';
+import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award, Sparkles, Gem, Globe, Clock, Wallet, Bot, Heart, TrendingUp } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 
 interface GameState {
@@ -31,195 +32,224 @@ interface ShopItem {
 const ShopTab = ({ gameState }: { gameState: GameState }) => {
   const { coins, setCoins, diamonds, setDiamonds, setExperience } = gameState;
   const [activeSection, setActiveSection] = useState<'coins' | 'diamonds' | 'ton'>('coins');
-  const [tonWalletConnected, setTonWalletConnected] = useState(false);
+  const [tonWalletConnected, setTonWalletConnected] = useState(() => {
+    return localStorage.getItem('tonWalletConnected') === 'true';
+  });
   
   const shopItems: ShopItem[] = [
+    // Coins Items - Game-related rewards
     {
-      id: 'click_boost',
-      name: 'Boost de Click',
-      description: 'Duplica el poder de click por 1 hora',
-      icon: Zap,
+      id: 'auto_clicker',
+      name: 'Auto Clicker Bot',
+      description: 'Clicks automáticamente por 1 hora',
+      icon: Bot,
       price: 5000,
       currency: 'coins',
       rarity: 'common',
-      effect: '+100% Click Power'
+      effect: 'Auto-click x1 hora'
     },
     {
-      id: 'exp_boost',
-      name: 'Boost de Experiencia',
-      description: 'Triple experiencia por 30 minutos',
+      id: 'coin_magnet',
+      name: 'Imán de Monedas',
+      description: 'Atrae monedas automáticamente',
+      icon: Coins,
+      price: 8000,
+      currency: 'coins',
+      rarity: 'rare',
+      effect: '+50% Monedas por click'
+    },
+    {
+      id: 'exp_multiplier',
+      name: 'Multiplicador EXP',
+      description: 'Dobla la experiencia ganada por 2 horas',
       icon: Star,
       price: 15000,
       currency: 'coins',
       rarity: 'rare',
-      effect: '+200% EXP'
+      effect: '+100% EXP x2 horas'
     },
     {
-      id: 'coin_multiplier',
-      name: 'Multiplicador de Monedas',
-      description: 'Multiplica las monedas ganadas x5 por 2 horas',
-      icon: Coins,
-      price: 50000,
-      currency: 'coins',
-      rarity: 'epic',
-      effect: '+400% Coins'
-    },
-    {
-      id: 'flame_sword',
-      name: 'Espada de Fuego',
-      description: 'Daño ardiente continuo por 1 hora',
-      icon: Flame,
+      id: 'speed_boost',
+      name: 'Acelerador Temporal',
+      description: 'Reduce tiempos de cooldown a la mitad',
+      icon: Clock,
       price: 25000,
       currency: 'coins',
       rarity: 'epic',
-      effect: '+200 DPS'
+      effect: '-50% Cooldowns x1 hora'
     },
     {
-      id: 'axe_power',
-      name: 'Hacha de Guerra',
-      description: 'Golpes críticos por 45 minutos',
-      icon: Axe,
+      id: 'lucky_charm',
+      name: 'Amuleto de la Suerte',
+      description: 'Aumenta la probabilidad de recompensas',
+      icon: Sparkles,
       price: 35000,
       currency: 'coins',
-      rarity: 'rare',
-      effect: '+50% Crítico'
+      rarity: 'epic',
+      effect: '+25% Drop Rate x3 horas'
     },
     {
-      id: 'premium_boost',
-      name: 'Boost Premium',
-      description: 'Todos los boosts activos por 6 horas',
-      icon: Crown,
-      price: 50,
-      currency: 'diamonds',
+      id: 'robot_army',
+      name: 'Ejército Robótico',
+      description: 'Todos tus robots ganan EXP extra',
+      icon: Target,
+      price: 50000,
+      currency: 'coins',
       rarity: 'legendary',
-      effect: 'All Boosts Active'
+      effect: '+200% Robot EXP x2 horas'
     },
     {
-      id: 'instant_level',
-      name: 'Subida de Nivel',
-      description: 'Gana un nivel completo al instante',
-      icon: Rocket,
+      id: 'golden_touch',
+      name: 'Toque Dorado',
+      description: 'Convierte clicks en oro puro',
+      icon: Crown,
+      price: 75000,
+      currency: 'coins',
+      rarity: 'legendary',
+      effect: '+500% Coin Value x1 hora'
+    },
+
+    // Diamonds Items - Premium game effects
+    {
+      id: 'instant_upgrade',
+      name: 'Mejora Instantánea',
+      description: 'Mejora una carta sin cooldown ni costo',
+      icon: TrendingUp,
+      price: 15,
+      currency: 'diamonds',
+      rarity: 'rare',
+      effect: '1 Mejora Gratis'
+    },
+    {
+      id: 'diamond_rain',
+      name: 'Lluvia de Diamantes',
+      description: 'Recibe diamantes cada minuto por 1 hora',
+      icon: Diamond,
       price: 25,
       currency: 'diamonds',
       rarity: 'epic',
-      effect: '+1 Level'
+      effect: '+1 Diamante/min x1 hora'
     },
     {
-      id: 'diamond_pack',
-      name: 'Pack de Diamantes',
-      description: 'Recibe diamantes adicionales',
-      icon: Diamond,
-      price: 100,
-      currency: 'diamonds',
-      rarity: 'rare',
-      effect: '+50 Diamonds'
-    },
-    {
-      id: 'mythic_shield',
-      name: 'Escudo Mítico',
-      description: 'Protección total contra daños',
-      icon: Shield,
-      price: 75,
-      currency: 'diamonds',
-      rarity: 'mythic',
-      effect: '100% Protección'
-    },
-    {
-      id: 'legendary_trophy',
-      name: 'Trofeo Legendario',
-      description: 'Recompensas diarias mejoradas',
-      icon: Award,
-      price: 200,
-      currency: 'diamonds',
-      rarity: 'legendary',
-      effect: '+300% Daily Rewards'
-    },
-    {
-      id: 'cosmic_sparkle',
-      name: 'Destello Cósmico',
-      description: 'Efecto visual premium y bonus de experiencia',
-      icon: Sparkles,
-      price: 120,
-      currency: 'diamonds',
-      rarity: 'legendary',
-      effect: '+250% Visual Effects'
-    },
-    {
-      id: 'gem_master',
-      name: 'Maestro de Gemas',
-      description: 'Aumenta la rareza de los drops por 24 horas',
-      icon: Gem,
-      price: 150,
+      id: 'premium_robot',
+      name: 'Robot Premium',
+      description: 'Desbloquea un robot exclusivo temporalmente',
+      icon: Bot,
+      price: 40,
       currency: 'diamonds',
       rarity: 'epic',
-      effect: '+100% Rare Drops'
+      effect: 'Robot Temporal +1000% EXP'
     },
     {
-      id: 'global_boost',
-      name: 'Boost Global',
-      description: 'Aumenta todas las estadísticas por 12 horas',
-      icon: Globe,
-      price: 180,
+      id: 'time_skip',
+      name: 'Salto Temporal',
+      description: 'Completa instantáneamente todos los cooldowns',
+      icon: Clock,
+      price: 50,
+      currency: 'diamonds',
+      rarity: 'legendary',
+      effect: 'Reset All Cooldowns'
+    },
+    {
+      id: 'level_boost',
+      name: 'Impulso de Nivel',
+      description: 'Gana experiencia equivalente a un nivel completo',
+      icon: Rocket,
+      price: 75,
+      currency: 'diamonds',
+      rarity: 'legendary',
+      effect: '+1 Nivel Completo'
+    },
+    {
+      id: 'ultimate_package',
+      name: 'Paquete Supremo',
+      description: 'Todos los boosts activos por 6 horas',
+      icon: Crown,
+      price: 100,
       currency: 'diamonds',
       rarity: 'mythic',
-      effect: '+50% All Stats'
+      effect: 'All Boosts x6 horas'
     },
+
+    // TON Items - Exclusive and special
     {
-      id: 'time_warp',
-      name: 'Distorsión Temporal',
-      description: 'Acelera el tiempo de enfriamiento de las cartas',
-      icon: Clock,
-      price: 90,
-      currency: 'diamonds',
-      rarity: 'rare',
-      effect: '-75% Cooldowns'
-    },
-    {
-      id: 'mega_boost_ton',
-      name: 'Mega Boost TON',
-      description: 'Boost supremo con TON - 24 horas de poder máximo',
-      icon: Crown,
+      id: 'nft_robot_ton',
+      name: 'Robot NFT Exclusivo',
+      description: 'Robot único solo disponible con TON',
+      icon: Bot,
       price: 0.5,
       currency: 'ton',
       rarity: 'mythic',
-      effect: '+1000% All Stats'
+      effect: 'Robot NFT Permanente'
     },
     {
-      id: 'exclusive_robot_ton',
-      name: 'Robot Exclusivo TON',
-      description: 'Robot exclusivo solo disponible con TON',
-      icon: Rocket,
+      id: 'ton_multiplier',
+      name: 'Multiplicador TON',
+      description: 'Multiplica todas las ganancias por 10',
+      icon: Zap,
       price: 1.0,
       currency: 'ton',
       rarity: 'mythic',
-      effect: 'Exclusive Robot NFT'
+      effect: '+1000% All Gains x24h'
     },
     {
-      id: 'premium_pack_ton',
-      name: 'Pack Premium TON',
-      description: 'Paquete premium con múltiples beneficios',
-      icon: Gift,
+      id: 'cosmic_upgrade',
+      name: 'Mejora Cósmica',
+      description: 'Mejora todas las cartas al nivel máximo',
+      icon: Star,
+      price: 1.5,
+      currency: 'ton',
+      rarity: 'mythic',
+      effect: 'Max Level All Cards'
+    },
+    {
+      id: 'infinity_token',
+      name: 'Token del Infinito',
+      description: 'Recursos ilimitados por 1 hora',
+      icon: Gem,
       price: 2.0,
       currency: 'ton',
-      rarity: 'legendary',
-      effect: '+1M Coins, +500 Diamonds'
+      rarity: 'mythic',
+      effect: 'Infinite Resources x1h'
+    },
+    {
+      id: 'god_mode_ton',
+      name: 'Modo Dios TON',
+      description: 'Poder supremo absoluto',
+      icon: Crown,
+      price: 5.0,
+      currency: 'ton',
+      rarity: 'mythic',
+      effect: 'God Mode x1 hora'
     }
   ];
 
   const connectTonWallet = async () => {
     try {
-      // Check if TON Connect is available
-      if (window.Telegram && window.Telegram.WebApp) {
-        // Simulate TON wallet connection
+      // Simulate TON wallet connection with better detection
+      if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
+        // Check if we're in Telegram WebApp
+        const webApp = (window as any).Telegram.WebApp;
+        
+        // Simulate TON Connect integration
         setTonWalletConnected(true);
+        localStorage.setItem('tonWalletConnected', 'true');
+        
         toast({
           description: "¡TON Wallet conectada exitosamente!",
           variant: "default",
         });
+        
+        // Simulate wallet address (in real implementation, this would come from TON Connect)
+        localStorage.setItem('tonWalletAddress', 'UQAbc123...def456');
+        
       } else {
+        // Fallback for testing outside Telegram
+        setTonWalletConnected(true);
+        localStorage.setItem('tonWalletConnected', 'true');
         toast({
-          description: "TON Wallet no disponible. Abre desde Telegram.",
-          variant: "destructive",
+          description: "TON Wallet simulada conectada (modo desarrollo)",
+          variant: "default",
         });
       }
     } catch (error) {
@@ -228,6 +258,16 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         variant: "destructive",
       });
     }
+  };
+
+  const disconnectTonWallet = () => {
+    setTonWalletConnected(false);
+    localStorage.removeItem('tonWalletConnected');
+    localStorage.removeItem('tonWalletAddress');
+    toast({
+      description: "TON Wallet desconectada",
+      variant: "default",
+    });
   };
 
   const buyItem = (item: ShopItem) => {
@@ -258,63 +298,63 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
     }
     // For TON items, we simulate the purchase
 
+    // Apply specific effects based on item
     switch (item.id) {
-      case 'exp_boost':
+      case 'auto_clicker':
+        toast({
+          description: "¡Auto Clicker activado por 1 hora!",
+          variant: "default",
+        });
+        break;
+      case 'coin_magnet':
+        setCoins(prev => prev + 25000);
+        toast({
+          description: "¡Imán de Monedas activado! +25,000 monedas bonus",
+          variant: "default",
+        });
+        break;
+      case 'exp_multiplier':
         setExperience(prev => prev + 100000);
         toast({
-          description: "¡Boost de Experiencia aplicado! +100,000 EXP",
+          description: "¡Multiplicador EXP activado! +100,000 EXP",
           variant: "default",
         });
         break;
-      case 'instant_level':
-        setExperience(prev => prev + 1000000);
+      case 'instant_upgrade':
+        setCoins(prev => prev + 50000);
         toast({
-          description: "¡Subida de Nivel aplicada! +1,000,000 EXP",
+          description: "¡Mejora Instantánea disponible! +50,000 monedas",
           variant: "default",
         });
         break;
-      case 'diamond_pack':
-        setDiamonds(prev => prev + 50);
-        toast({
-          description: "¡Pack de Diamantes adquirido! +50 Diamantes",
-          variant: "default",
-        });
-        break;
-      case 'cosmic_sparkle':
-        setExperience(prev => prev + 200000);
-        toast({
-          description: "¡Destello Cósmico activado! +200,000 EXP y efectos visuales mejorados",
-          variant: "default",
-        });
-        break;
-      case 'global_boost':
-        setCoins(prev => prev + 25000);
-        setExperience(prev => prev + 150000);
-        toast({
-          description: "¡Boost Global activado! +25,000 Monedas y +150,000 EXP",
-          variant: "default",
-        });
-        break;
-      case 'mega_boost_ton':
-        setCoins(prev => prev + 100000);
+      case 'level_boost':
         setExperience(prev => prev + 500000);
         toast({
-          description: "¡Mega Boost TON activado! +100,000 Monedas y +500,000 EXP",
+          description: "¡Impulso de Nivel activado! +500,000 EXP",
           variant: "default",
         });
         break;
-      case 'premium_pack_ton':
+      case 'nft_robot_ton':
         setCoins(prev => prev + 1000000);
-        setDiamonds(prev => prev + 500);
+        setExperience(prev => prev + 1000000);
         toast({
-          description: "¡Pack Premium TON adquirido! +1,000,000 Monedas y +500 Diamantes",
+          description: "¡Robot NFT Exclusivo adquirido! +1M Monedas y +1M EXP",
+          variant: "default",
+        });
+        break;
+      case 'god_mode_ton':
+        setCoins(prev => prev + 5000000);
+        setDiamonds(prev => prev + 1000);
+        setExperience(prev => prev + 5000000);
+        toast({
+          description: "¡MODO DIOS ACTIVADO! +5M Monedas, +1K Diamantes, +5M EXP",
           variant: "default",
         });
         break;
       default:
-        setCoins(prev => prev + 10000);
+        setCoins(prev => prev + 20000);
         toast({
-          description: "¡Item adquirido! +10,000 Monedas",
+          description: `¡${item.name} adquirido! +20,000 Monedas bonus`,
           variant: "default",
         });
     }
@@ -432,26 +472,38 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         <p className="text-white text-base mt-2 font-semibold drop-shadow-md">Mejora tu experiencia de juego</p>
       </div>
 
-      {/* TON Wallet Connection */}
-      {!tonWalletConnected && (
-        <Card className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Wallet className="w-8 h-8 text-cyan-400" />
-              <div>
-                <h3 className="text-lg font-bold text-white">Conecta tu TON Wallet</h3>
-                <p className="text-cyan-300 text-sm">Accede a items exclusivos con TON</p>
-              </div>
+      {/* Enhanced TON Wallet Connection */}
+      <Card className={`${tonWalletConnected ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30' : 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30'} p-4 backdrop-blur-sm`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Wallet className={`w-8 h-8 ${tonWalletConnected ? 'text-green-400' : 'text-cyan-400'}`} />
+            <div>
+              <h3 className="text-lg font-bold text-white">
+                {tonWalletConnected ? 'TON Wallet Conectada' : 'Conecta tu TON Wallet'}
+              </h3>
+              <p className={`text-sm ${tonWalletConnected ? 'text-green-300' : 'text-cyan-300'}`}>
+                {tonWalletConnected ? 'Acceso completo a items exclusivos TON' : 'Accede a items exclusivos con TON'}
+              </p>
             </div>
+          </div>
+          {tonWalletConnected ? (
+            <Button
+              onClick={disconnectTonWallet}
+              variant="outline"
+              className="border-red-500 text-red-400 hover:bg-red-500/20"
+            >
+              Desconectar
+            </Button>
+          ) : (
             <Button
               onClick={connectTonWallet}
               className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold"
             >
               Conectar Wallet
             </Button>
-          </div>
-        </Card>
-      )}
+          )}
+        </div>
+      </Card>
 
       {/* Navigation Tabs */}
       <div className="flex space-x-1 bg-gray-900/80 p-1 rounded-xl backdrop-blur-sm border border-gray-600">
@@ -529,7 +581,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
             <div>
               <p className="text-sm text-gray-300 font-medium">TON Wallet</p>
               <p className="text-sm font-bold text-cyan-400 drop-shadow-md">
-                {tonWalletConnected ? 'Conectada' : 'No conectada'}
+                {tonWalletConnected ? 'Conectada ✓' : 'No conectada'}
               </p>
             </div>
           </div>
