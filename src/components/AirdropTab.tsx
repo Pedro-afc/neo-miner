@@ -75,39 +75,39 @@ const AirdropTab = () => {
   return (
     <div className="space-y-6 max-w-md mx-auto">
       <div className="text-center">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-lg">
           Airdrop TapCoin
         </h2>
-        <p className="text-gray-300 text-sm mt-1">Participa y gana tokens gratis</p>
+        <p className="text-white text-sm mt-1 font-semibold drop-shadow-md">Participa y gana tokens gratis</p>
       </div>
 
       {/* Airdrop Info */}
-      <Card className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30 p-6">
+      <Card className="bg-gradient-to-r from-cyan-500/30 to-blue-500/30 border-cyan-500/50 p-6 backdrop-blur-md">
         <div className="text-center mb-4">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center">
-            <Plane className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+            <Plane className="w-8 h-8 text-white drop-shadow-lg" />
           </div>
-          <h3 className="text-xl font-bold text-white">{airdropData.name}</h3>
-          <p className="text-cyan-300">Pool Total: {airdropData.totalPool}</p>
+          <h3 className="text-xl font-bold text-white drop-shadow-md">{airdropData.name}</h3>
+          <p className="text-cyan-200 font-semibold drop-shadow-md">Pool Total: {airdropData.totalPool}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="text-center">
-            <Calendar className="w-5 h-5 mx-auto text-cyan-400 mb-1" />
-            <p className="text-xs text-gray-300">Inicio</p>
-            <p className="text-sm font-bold text-white">{airdropData.startDate}</p>
+          <div className="text-center bg-black/20 rounded-lg p-3 backdrop-blur-sm">
+            <Calendar className="w-5 h-5 mx-auto text-cyan-300 mb-1 drop-shadow-lg" />
+            <p className="text-xs text-cyan-200 font-medium">Inicio</p>
+            <p className="text-sm font-bold text-white drop-shadow-md">{airdropData.startDate}</p>
           </div>
-          <div className="text-center">
-            <Clock className="w-5 h-5 mx-auto text-cyan-400 mb-1" />
-            <p className="text-xs text-gray-300">Fin</p>
-            <p className="text-sm font-bold text-white">{airdropData.endDate}</p>
+          <div className="text-center bg-black/20 rounded-lg p-3 backdrop-blur-sm">
+            <Clock className="w-5 h-5 mx-auto text-cyan-300 mb-1 drop-shadow-lg" />
+            <p className="text-xs text-cyan-200 font-medium">Fin</p>
+            <p className="text-sm font-bold text-white drop-shadow-md">{airdropData.endDate}</p>
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 bg-black/20 rounded-lg p-3 backdrop-blur-sm">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-300">Participantes</span>
-            <span className="text-white font-bold">
+            <span className="text-cyan-200 font-medium drop-shadow-sm">Participantes</span>
+            <span className="text-white font-bold drop-shadow-md">
               {airdropData.participants.toLocaleString()} / {airdropData.maxParticipants.toLocaleString()}
             </span>
           </div>
@@ -116,34 +116,34 @@ const AirdropTab = () => {
       </Card>
 
       {/* User Status */}
-      <Card className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30 p-4">
+      <Card className="bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-green-500/50 p-4 backdrop-blur-md">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-white">Tu Progreso</h3>
-          <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
+          <h3 className="text-lg font-bold text-white drop-shadow-md">Tu Progreso</h3>
+          <Badge className="bg-green-500/30 text-green-200 border-green-400/50 font-semibold">
             Elegible
           </Badge>
         </div>
         
-        <div className="space-y-2 mb-4">
+        <div className="space-y-2 mb-4 bg-black/20 rounded-lg p-3 backdrop-blur-sm">
           <div className="flex justify-between text-sm">
-            <span className="text-gray-300">Tareas Completadas</span>
-            <span className="text-white font-bold">
+            <span className="text-green-200 font-medium drop-shadow-sm">Tareas Completadas</span>
+            <span className="text-white font-bold drop-shadow-md">
               {airdropData.completedTasks} / {airdropData.totalTasks}
             </span>
           </div>
           <Progress value={taskProgress} className="h-2 bg-green-900/50" />
         </div>
 
-        <div className="text-center">
-          <p className="text-sm text-gray-300 mb-2">Tokens Estimados</p>
-          <p className="text-2xl font-bold text-green-400">8,800 TAPCOIN</p>
+        <div className="text-center bg-black/20 rounded-lg p-3 backdrop-blur-sm">
+          <p className="text-sm text-green-200 mb-2 font-medium drop-shadow-sm">Tokens Estimados</p>
+          <p className="text-2xl font-bold text-green-300 drop-shadow-lg">8,800 TAPCOIN</p>
         </div>
       </Card>
 
       {/* Tasks */}
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-yellow-400" />
+        <h3 className="text-lg font-bold text-white flex items-center gap-2 drop-shadow-md">
+          <Trophy className="w-5 h-5 text-yellow-400 drop-shadow-lg" />
           Tareas del Airdrop
         </h3>
 
@@ -152,35 +152,35 @@ const AirdropTab = () => {
           return (
             <Card 
               key={task.id}
-              className={`p-4 ${
+              className={`p-4 backdrop-blur-md ${
                 task.completed 
-                  ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30' 
-                  : 'bg-gradient-to-r from-gray-500/20 to-gray-600/20 border-gray-500/30'
+                  ? 'bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-green-500/50' 
+                  : 'bg-gradient-to-r from-gray-500/30 to-gray-600/30 border-gray-500/50'
               }`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-lg ${
-                    task.completed ? 'bg-green-500/20' : 'bg-gray-500/20'
+                  <div className={`p-2 rounded-lg backdrop-blur-sm ${
+                    task.completed ? 'bg-green-500/30' : 'bg-gray-500/30'
                   }`}>
-                    <Icon className={`w-5 h-5 ${
-                      task.completed ? 'text-green-400' : 'text-gray-400'
+                    <Icon className={`w-5 h-5 drop-shadow-lg ${
+                      task.completed ? 'text-green-300' : 'text-gray-300'
                     }`} />
                   </div>
                   <div>
-                    <h4 className="font-bold text-white text-sm">{task.title}</h4>
-                    <p className="text-xs text-gray-300">{task.description}</p>
-                    <p className="text-xs text-yellow-400 font-medium">{task.reward}</p>
+                    <h4 className="font-bold text-white text-sm drop-shadow-md">{task.title}</h4>
+                    <p className="text-xs text-gray-200 drop-shadow-sm">{task.description}</p>
+                    <p className="text-xs text-yellow-300 font-medium drop-shadow-sm">{task.reward}</p>
                   </div>
                 </div>
                 
                 {task.completed ? (
-                  <CheckCircle className="w-6 h-6 text-green-400" />
+                  <CheckCircle className="w-6 h-6 text-green-300 drop-shadow-lg" />
                 ) : (
                   <Button
                     size="sm"
                     variant="outline"
-                    className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10"
+                    className="border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20 backdrop-blur-sm bg-black/20 font-semibold"
                   >
                     Completar
                   </Button>
@@ -192,13 +192,13 @@ const AirdropTab = () => {
       </div>
 
       {/* Next Steps */}
-      <Card className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 p-4">
-        <h3 className="text-lg font-bold text-white mb-3">Próximos Pasos</h3>
-        <div className="space-y-2 text-sm text-gray-300">
-          <p>• Completa todas las tareas para maximizar tu recompensa</p>
-          <p>• Conecta tu wallet antes del final del airdrop</p>
-          <p>• Los tokens se distribuirán 30 días después del cierre</p>
-          <p>• Mantente activo para futuras oportunidades</p>
+      <Card className="bg-gradient-to-r from-purple-500/30 to-pink-500/30 border-purple-500/50 p-4 backdrop-blur-md">
+        <h3 className="text-lg font-bold text-white mb-3 drop-shadow-md">Próximos Pasos</h3>
+        <div className="space-y-2 text-sm text-gray-100 bg-black/20 rounded-lg p-3 backdrop-blur-sm">
+          <p className="drop-shadow-sm">• Completa todas las tareas para maximizar tu recompensa</p>
+          <p className="drop-shadow-sm">• Conecta tu wallet antes del final del airdrop</p>
+          <p className="drop-shadow-sm">• Los tokens se distribuirán 30 días después del cierre</p>
+          <p className="drop-shadow-sm">• Mantente activo para futuras oportunidades</p>
         </div>
       </Card>
     </div>

@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award, Sparkles, Gem, Globe, Clock } from 'lucide-react';
+import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award, Sparkles, Gem, Globe, Clock, Wallet } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 
 interface GameState {
@@ -23,7 +22,7 @@ interface ShopItem {
   description: string;
   icon: any;
   price: number;
-  currency: 'coins' | 'diamonds';
+  currency: 'coins' | 'diamonds' | 'ton';
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
   effect: string;
   purchased?: boolean;
@@ -31,7 +30,8 @@ interface ShopItem {
 
 const ShopTab = ({ gameState }: { gameState: GameState }) => {
   const { coins, setCoins, diamonds, setDiamonds, setExperience } = gameState;
-  const [activeSection, setActiveSection] = useState<'coins' | 'diamonds'>('coins');
+  const [activeSection, setActiveSection] = useState<'coins' | 'diamonds' | 'ton'>('coins');
+  const [tonWalletConnected, setTonWalletConnected] = useState(false);
   
   const shopItems: ShopItem[] = [
     {
@@ -173,14 +173,79 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       currency: 'diamonds',
       rarity: 'rare',
       effect: '-75% Cooldowns'
+    },
+    {
+      id: 'mega_boost_ton',
+      name: 'Mega Boost TON',
+      description: 'Boost supremo con TON - 24 horas de poder máximo',
+      icon: Crown,
+      price: 0.5,
+      currency: 'ton',
+      rarity: 'mythic',
+      effect: '+1000% All Stats'
+    },
+    {
+      id: 'exclusive_robot_ton',
+      name: 'Robot Exclusivo TON',
+      description: 'Robot exclusivo solo disponible con TON',
+      icon: Rocket,
+      price: 1.0,
+      currency: 'ton',
+      rarity: 'mythic',
+      effect: 'Exclusive Robot NFT'
+    },
+    {
+      id: 'premium_pack_ton',
+      name: 'Pack Premium TON',
+      description: 'Paquete premium con múltiples beneficios',
+      icon: Gift,
+      price: 2.0,
+      currency: 'ton',
+      rarity: 'legendary',
+      effect: '+1M Coins, +500 Diamonds'
     }
   ];
 
+  const connectTonWallet = async () => {
+    try {
+      // Check if TON Connect is available
+      if (window.Telegram && window.Telegram.WebApp) {
+        // Simulate TON wallet connection
+        setTonWalletConnected(true);
+        toast({
+          description: "¡TON Wallet conectada exitosamente!",
+          variant: "default",
+        });
+      } else {
+        toast({
+          description: "TON Wallet no disponible. Abre desde Telegram.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        description: "Error al conectar TON Wallet",
+        variant: "destructive",
+      });
+    }
+  };
+
   const buyItem = (item: ShopItem) => {
-    const canAfford = item.currency === 'coins' ? coins >= item.price : diamonds >= item.price;
+    if (item.currency === 'ton' && !tonWalletConnected) {
+      toast({
+        description: "Necesitas conectar tu TON Wallet primero",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const canAfford = item.currency === 'coins' ? coins >= item.price : 
+                     item.currency === 'diamonds' ? diamonds >= item.price :
+                     tonWalletConnected; // For TON, just check if wallet is connected
+
     if (!canAfford) {
       toast({
-        description: `No tienes suficientes ${item.currency === 'coins' ? 'monedas' : 'diamantes'} para comprar este item.`,
+        description: `No tienes suficientes ${item.currency === 'coins' ? 'monedas' : item.currency === 'diamonds' ? 'diamantes' : 'TON'} para comprar este item.`,
         variant: "destructive",
       });
       return;
@@ -188,9 +253,10 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
 
     if (item.currency === 'coins') {
       setCoins(prev => prev - item.price);
-    } else {
+    } else if (item.currency === 'diamonds') {
       setDiamonds(prev => prev - item.price);
     }
+    // For TON items, we simulate the purchase
 
     switch (item.id) {
       case 'exp_boost':
@@ -226,6 +292,22 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         setExperience(prev => prev + 150000);
         toast({
           description: "¡Boost Global activado! +25,000 Monedas y +150,000 EXP",
+          variant: "default",
+        });
+        break;
+      case 'mega_boost_ton':
+        setCoins(prev => prev + 100000);
+        setExperience(prev => prev + 500000);
+        toast({
+          description: "¡Mega Boost TON activado! +100,000 Monedas y +500,000 EXP",
+          variant: "default",
+        });
+        break;
+      case 'premium_pack_ton':
+        setCoins(prev => prev + 1000000);
+        setDiamonds(prev => prev + 500);
+        toast({
+          description: "¡Pack Premium TON adquirido! +1,000,000 Monedas y +500 Diamantes",
           variant: "default",
         });
         break;
@@ -274,12 +356,15 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
 
   const coinsItems = shopItems.filter(item => item.currency === 'coins');
   const diamondsItems = shopItems.filter(item => item.currency === 'diamonds');
+  const tonItems = shopItems.filter(item => item.currency === 'ton');
 
   const renderShopItems = (items: ShopItem[]) => (
     <div className="space-y-4">
       {items.map((item) => {
         const Icon = item.icon;
-        const canAfford = item.currency === 'coins' ? coins >= item.price : diamonds >= item.price;
+        const canAfford = item.currency === 'coins' ? coins >= item.price : 
+                         item.currency === 'diamonds' ? diamonds >= item.price :
+                         tonWalletConnected;
         
         return (
           <Card key={item.id} className={`bg-gradient-to-r ${getRarityColor(item.rarity)} p-4 border-2 backdrop-blur-sm`}>
@@ -295,20 +380,26 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
                       {item.rarity.toUpperCase()}
                     </Badge>
                   </div>
-                  <p className="text-sm text-gray-200 mb-2 drop-shadow-sm">{item.description}</p>
+                  <p className="text-sm text-white/90 mb-2 drop-shadow-sm">{item.description}</p>
                   <p className="text-sm text-green-300 font-bold drop-shadow-sm">{item.effect}</p>
                 </div>
               </div>
               
               <div className="text-right flex flex-col items-end gap-3">
                 <div className={`flex items-center gap-2 ${
-                  item.currency === 'coins' ? 'text-yellow-300' : 'text-blue-300'
+                  item.currency === 'coins' ? 'text-yellow-300' : 
+                  item.currency === 'diamonds' ? 'text-blue-300' :
+                  'text-cyan-300'
                 }`}>
                   {item.currency === 'coins' ? 
                     <Coins className="w-5 h-5 drop-shadow-lg" /> : 
-                    <Diamond className="w-5 h-5 drop-shadow-lg" />
+                    item.currency === 'diamonds' ?
+                    <Diamond className="w-5 h-5 drop-shadow-lg" /> :
+                    <Wallet className="w-5 h-5 drop-shadow-lg" />
                   }
-                  <span className="font-bold text-lg drop-shadow-md">{item.price.toLocaleString()}</span>
+                  <span className="font-bold text-lg drop-shadow-md">
+                    {item.currency === 'ton' ? `${item.price} TON` : item.price.toLocaleString()}
+                  </span>
                 </div>
                 
                 <Button
@@ -317,9 +408,9 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
                   size="sm"
                   className={`${
                     canAfford 
-                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0' 
-                      : 'bg-gray-700 cursor-not-allowed border-0'
-                  } text-white font-bold px-4 py-2`}
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0 text-white' 
+                      : 'bg-gray-700 cursor-not-allowed border-0 text-gray-400'
+                  } font-bold px-4 py-2`}
                 >
                   <ShoppingBag className="w-4 h-4 mr-2" />
                   COMPRAR
@@ -340,6 +431,27 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         </h2>
         <p className="text-white text-base mt-2 font-semibold drop-shadow-md">Mejora tu experiencia de juego</p>
       </div>
+
+      {/* TON Wallet Connection */}
+      {!tonWalletConnected && (
+        <Card className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Wallet className="w-8 h-8 text-cyan-400" />
+              <div>
+                <h3 className="text-lg font-bold text-white">Conecta tu TON Wallet</h3>
+                <p className="text-cyan-300 text-sm">Accede a items exclusivos con TON</p>
+              </div>
+            </div>
+            <Button
+              onClick={connectTonWallet}
+              className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold"
+            >
+              Conectar Wallet
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Navigation Tabs */}
       <div className="flex space-x-1 bg-gray-900/80 p-1 rounded-xl backdrop-blur-sm border border-gray-600">
@@ -367,18 +479,31 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
           <Diamond className="w-5 h-5" />
           <span className="font-bold">DIAMANTES</span>
         </Button>
+        <Button
+          onClick={() => setActiveSection('ton')}
+          variant="ghost"
+          className={`flex-1 flex items-center justify-center gap-2 rounded-lg transition-all duration-200 ${
+            activeSection === 'ton' 
+              ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-lg' 
+              : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+          }`}
+        >
+          <Wallet className="w-5 h-5" />
+          <span className="font-bold">TON</span>
+        </Button>
       </div>
 
       {/* Content based on active section */}
       <div className="mt-6">
         {activeSection === 'coins' && renderShopItems(coinsItems)}
         {activeSection === 'diamonds' && renderShopItems(diamondsItems)}
+        {activeSection === 'ton' && renderShopItems(tonItems)}
       </div>
 
       {/* Current Balance */}
       <Card className="bg-gray-900/80 backdrop-blur-sm border-2 border-gray-600 p-6">
         <h3 className="text-xl font-bold text-white mb-4 drop-shadow-md">Tu Balance</h3>
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-3 gap-6">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-lg bg-yellow-500/20">
               <Coins className="w-6 h-6 text-yellow-400 drop-shadow-lg" />
@@ -395,6 +520,17 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
             <div>
               <p className="text-sm text-gray-300 font-medium">Diamantes</p>
               <p className="text-2xl font-bold text-blue-400 drop-shadow-md">{diamonds.toLocaleString()}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-cyan-500/20">
+              <Wallet className="w-6 h-6 text-cyan-400 drop-shadow-lg" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-300 font-medium">TON Wallet</p>
+              <p className="text-sm font-bold text-cyan-400 drop-shadow-md">
+                {tonWalletConnected ? 'Conectada' : 'No conectada'}
+              </p>
             </div>
           </div>
         </div>
