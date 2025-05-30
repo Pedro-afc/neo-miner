@@ -22,7 +22,7 @@ interface CardData {
   id: string;
   name: string;
   description: string;
-  icon: any;
+  iconName: string; // Changed from icon to iconName
   level: number;
   basePrice: number;
   currentPrice: number;
@@ -37,6 +37,24 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
   const { coins, setCoins, setExperience } = gameState;
   const [activeCategory, setActiveCategory] = useState<'combat' | 'defense' | 'utility' | 'legendary' | 'nano'>('combat');
   
+  // Icon mapping object
+  const iconMap = {
+    Zap,
+    Shield,
+    Gem,
+    Heart,
+    Rocket,
+    Bolt,
+    Sword,
+    Target,
+    Bot,
+    Cpu,
+    Wrench,
+    Crown,
+    Microscope,
+    TrendingUp
+  };
+  
   const [cards, setCards] = useState<CardData[]>(() => {
     const savedCards = loadGameData('gameCards', null);
     if (savedCards) return savedCards;
@@ -47,7 +65,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'assault_bot',
         name: 'Assault Bot X1',
         description: 'Basic combat android',
-        icon: Zap,
+        iconName: 'Zap',
         level: 1,
         basePrice: 1000,
         currentPrice: 1000,
@@ -60,7 +78,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'striker_mech',
         name: 'Striker Mech',
         description: 'Lightning-fast attack robot',
-        icon: Bolt,
+        iconName: 'Bolt',
         level: 1,
         basePrice: 2500,
         currentPrice: 2500,
@@ -73,7 +91,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'blaster_android',
         name: 'Blaster Android',
         description: 'Energy weapon specialist',
-        icon: Target,
+        iconName: 'Target',
         level: 1,
         basePrice: 5000,
         currentPrice: 5000,
@@ -86,7 +104,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'warrior_cyborg',
         name: 'Warrior Cyborg',
         description: 'Enhanced combat unit',
-        icon: Sword,
+        iconName: 'Sword',
         level: 1,
         basePrice: 8000,
         currentPrice: 8000,
@@ -99,7 +117,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'battle_droid',
         name: 'Battle Droid',
         description: 'Armored combat machine',
-        icon: Bot,
+        iconName: 'Bot',
         level: 1,
         basePrice: 12000,
         currentPrice: 12000,
@@ -112,7 +130,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'destroyer_mech',
         name: 'Destroyer Mech',
         description: 'Heavy assault robot',
-        icon: Rocket,
+        iconName: 'Rocket',
         level: 1,
         basePrice: 18000,
         currentPrice: 18000,
@@ -125,7 +143,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'terminator_bot',
         name: 'Terminator Bot',
         description: 'Advanced killing machine',
-        icon: Zap,
+        iconName: 'Zap',
         level: 1,
         basePrice: 25000,
         currentPrice: 25000,
@@ -138,7 +156,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'plasma_warrior',
         name: 'Plasma Warrior',
         description: 'Plasma cannon equipped',
-        icon: Bolt,
+        iconName: 'Bolt',
         level: 1,
         basePrice: 35000,
         currentPrice: 35000,
@@ -151,7 +169,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'titan_combat',
         name: 'Combat Titan',
         description: 'Massive war machine',
-        icon: Target,
+        iconName: 'Target',
         level: 1,
         basePrice: 50000,
         currentPrice: 50000,
@@ -164,7 +182,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'apex_fighter',
         name: 'Apex Fighter',
         description: 'Ultimate combat robot',
-        icon: Sword,
+        iconName: 'Sword',
         level: 1,
         basePrice: 75000,
         currentPrice: 75000,
@@ -179,7 +197,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'guardian_drone',
         name: 'Guardian Drone',
         description: 'Basic shield generator',
-        icon: Shield,
+        iconName: 'Shield',
         level: 1,
         basePrice: 1500,
         currentPrice: 1500,
@@ -192,7 +210,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'barrier_bot',
         name: 'Barrier Bot',
         description: 'Energy barrier creator',
-        icon: Heart,
+        iconName: 'Heart',
         level: 1,
         basePrice: 3000,
         currentPrice: 3000,
@@ -205,7 +223,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'protector_unit',
         name: 'Protector Unit',
         description: 'Advanced defense system',
-        icon: Shield,
+        iconName: 'Shield',
         level: 1,
         basePrice: 6000,
         currentPrice: 6000,
@@ -218,7 +236,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'fortress_drone',
         name: 'Fortress Drone',
         description: 'Mobile defense platform',
-        icon: Bot,
+        iconName: 'Bot',
         level: 1,
         basePrice: 10000,
         currentPrice: 10000,
@@ -231,7 +249,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'aegis_system',
         name: 'Aegis System',
         description: 'Multi-layer protection',
-        icon: Crown,
+        iconName: 'Crown',
         level: 1,
         basePrice: 15000,
         currentPrice: 15000,
@@ -244,7 +262,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'sentinel_mech',
         name: 'Sentinel Mech',
         description: 'Watchful guardian robot',
-        icon: Target,
+        iconName: 'Target',
         level: 1,
         basePrice: 22000,
         currentPrice: 22000,
@@ -257,7 +275,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'bastion_unit',
         name: 'Bastion Unit',
         description: 'Immovable defense core',
-        icon: Shield,
+        iconName: 'Shield',
         level: 1,
         basePrice: 32000,
         currentPrice: 32000,
@@ -270,7 +288,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'citadel_drone',
         name: 'Citadel Drone',
         description: 'Fortress-class defender',
-        icon: Heart,
+        iconName: 'Heart',
         level: 1,
         basePrice: 45000,
         currentPrice: 45000,
@@ -283,7 +301,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'rampart_bot',
         name: 'Rampart Bot',
         description: 'Impenetrable wall system',
-        icon: Bot,
+        iconName: 'Bot',
         level: 1,
         basePrice: 65000,
         currentPrice: 65000,
@@ -296,7 +314,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'ultimate_shield',
         name: 'Ultimate Shield',
         description: 'Perfect defense matrix',
-        icon: Crown,
+        iconName: 'Crown',
         level: 1,
         basePrice: 90000,
         currentPrice: 90000,
@@ -311,7 +329,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'mining_bot',
         name: 'Mining Bot',
         description: 'Resource extraction unit',
-        icon: Gem,
+        iconName: 'Gem',
         level: 1,
         basePrice: 2000,
         currentPrice: 2000,
@@ -324,7 +342,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'engineer_droid',
         name: 'Engineer Droid',
         description: 'Construction specialist',
-        icon: Wrench,
+        iconName: 'Wrench',
         level: 1,
         basePrice: 4000,
         currentPrice: 4000,
@@ -337,7 +355,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'repair_unit',
         name: 'Repair Unit',
         description: 'Maintenance robot',
-        icon: Heart,
+        iconName: 'Heart',
         level: 1,
         basePrice: 7000,
         currentPrice: 7000,
@@ -350,7 +368,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'harvester_mech',
         name: 'Harvester Mech',
         description: 'Advanced resource gatherer',
-        icon: Gem,
+        iconName: 'Gem',
         level: 1,
         basePrice: 11000,
         currentPrice: 11000,
@@ -363,7 +381,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'builder_bot',
         name: 'Builder Bot',
         description: 'Automated constructor',
-        icon: Rocket,
+        iconName: 'Rocket',
         level: 1,
         basePrice: 16000,
         currentPrice: 16000,
@@ -376,7 +394,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'processor_unit',
         name: 'Processor Unit',
         description: 'Data processing specialist',
-        icon: Cpu,
+        iconName: 'Cpu',
         level: 1,
         basePrice: 24000,
         currentPrice: 24000,
@@ -389,7 +407,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'optimizer_droid',
         name: 'Optimizer Droid',
         description: 'Efficiency enhancement bot',
-        icon: TrendingUp,
+        iconName: 'TrendingUp',
         level: 1,
         basePrice: 35000,
         currentPrice: 35000,
@@ -402,7 +420,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'mega_miner',
         name: 'Mega Miner',
         description: 'Industrial mining machine',
-        icon: Gem,
+        iconName: 'Gem',
         level: 1,
         basePrice: 50000,
         currentPrice: 50000,
@@ -415,7 +433,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'factory_bot',
         name: 'Factory Bot',
         description: 'Automated production unit',
-        icon: Wrench,
+        iconName: 'Wrench',
         level: 1,
         basePrice: 72000,
         currentPrice: 72000,
@@ -428,7 +446,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'nexus_core',
         name: 'Nexus Core',
         description: 'Central utility hub',
-        icon: Cpu,
+        iconName: 'Cpu',
         level: 1,
         basePrice: 100000,
         currentPrice: 100000,
@@ -443,7 +461,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'cyber_knight',
         name: 'Cyber Knight',
         description: 'Noble warrior cyborg',
-        icon: Sword,
+        iconName: 'Sword',
         level: 1,
         basePrice: 20000,
         currentPrice: 20000,
@@ -456,7 +474,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'mech_emperor',
         name: 'Mech Emperor',
         description: 'Royal combat cyborg',
-        icon: Crown,
+        iconName: 'Crown',
         level: 1,
         basePrice: 35000,
         currentPrice: 35000,
@@ -469,7 +487,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'quantum_warrior',
         name: 'Quantum Warrior',
         description: 'Reality-bending fighter',
-        icon: Zap,
+        iconName: 'Zap',
         level: 1,
         basePrice: 55000,
         currentPrice: 55000,
@@ -482,7 +500,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'cosmic_guardian',
         name: 'Cosmic Guardian',
         description: 'Interdimensional protector',
-        icon: Shield,
+        iconName: 'Shield',
         level: 1,
         basePrice: 80000,
         currentPrice: 80000,
@@ -495,7 +513,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'void_hunter',
         name: 'Void Hunter',
         description: 'Dark space assassin',
-        icon: Target,
+        iconName: 'Target',
         level: 1,
         basePrice: 120000,
         currentPrice: 120000,
@@ -508,7 +526,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'stellar_commander',
         name: 'Stellar Commander',
         description: 'Galactic fleet leader',
-        icon: Rocket,
+        iconName: 'Rocket',
         level: 1,
         basePrice: 170000,
         currentPrice: 170000,
@@ -521,7 +539,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'omega_cyborg',
         name: 'Omega Cyborg',
         description: 'Ultimate evolution form',
-        icon: Bot,
+        iconName: 'Bot',
         level: 1,
         basePrice: 250000,
         currentPrice: 250000,
@@ -534,7 +552,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'apex_legend',
         name: 'Apex Legend',
         description: 'Mythical warrior machine',
-        icon: Crown,
+        iconName: 'Crown',
         level: 1,
         basePrice: 350000,
         currentPrice: 350000,
@@ -547,7 +565,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'titan_overlord',
         name: 'Titan Overlord',
         description: 'Supreme mech ruler',
-        icon: Sword,
+        iconName: 'Sword',
         level: 1,
         basePrice: 500000,
         currentPrice: 500000,
@@ -560,7 +578,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'infinity_prime',
         name: 'Infinity Prime',
         description: 'Beyond legendary power',
-        icon: Zap,
+        iconName: 'Zap',
         level: 1,
         basePrice: 1000000,
         currentPrice: 1000000,
@@ -575,7 +593,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'micro_swarm',
         name: 'Micro Swarm',
         description: 'Basic nano collective',
-        icon: Target,
+        iconName: 'Target',
         level: 1,
         basePrice: 15000,
         currentPrice: 15000,
@@ -588,7 +606,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'hive_cluster',
         name: 'Hive Cluster',
         description: 'Coordinated nano group',
-        icon: Microscope,
+        iconName: 'Microscope',
         level: 1,
         basePrice: 25000,
         currentPrice: 25000,
@@ -601,7 +619,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'quantum_dots',
         name: 'Quantum Dots',
         description: 'Quantum-enabled nanobots',
-        icon: Gem,
+        iconName: 'Gem',
         level: 1,
         basePrice: 40000,
         currentPrice: 40000,
@@ -614,7 +632,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'neural_mesh',
         name: 'Neural Mesh',
         description: 'Brain-connected nano network',
-        icon: Cpu,
+        iconName: 'Cpu',
         level: 1,
         basePrice: 65000,
         currentPrice: 65000,
@@ -627,7 +645,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'smart_dust',
         name: 'Smart Dust',
         description: 'Intelligent particle cloud',
-        icon: Target,
+        iconName: 'Target',
         level: 1,
         basePrice: 95000,
         currentPrice: 95000,
@@ -640,7 +658,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'plasma_mites',
         name: 'Plasma Mites',
         description: 'Energy-based nano swarm',
-        icon: Zap,
+        iconName: 'Zap',
         level: 1,
         basePrice: 140000,
         currentPrice: 140000,
@@ -653,7 +671,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'void_spores',
         name: 'Void Spores',
         description: 'Dark matter nanobots',
-        icon: Microscope,
+        iconName: 'Microscope',
         level: 1,
         basePrice: 200000,
         currentPrice: 200000,
@@ -666,7 +684,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'cosmic_mist',
         name: 'Cosmic Mist',
         description: 'Interdimensional nano cloud',
-        icon: Gem,
+        iconName: 'Gem',
         level: 1,
         basePrice: 300000,
         currentPrice: 300000,
@@ -679,7 +697,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'omega_swarm',
         name: 'Omega Swarm',
         description: 'Ultimate nano collective',
-        icon: Crown,
+        iconName: 'Crown',
         level: 1,
         basePrice: 450000,
         currentPrice: 450000,
@@ -692,7 +710,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         id: 'infinity_cloud',
         name: 'Infinity Cloud',
         description: 'Limitless nano matrix',
-        icon: Target,
+        iconName: 'Target',
         level: 1,
         basePrice: 750000,
         currentPrice: 750000,
@@ -717,7 +735,6 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
     saveGameData('gameCards', cards);
   }, [cards]);
 
-  // Effect to update cooldowns in real-time
   useEffect(() => {
     const interval = setInterval(() => {
       setCards(prevCards => 
@@ -742,13 +759,11 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
           const expGained = card.expBonus * 1000;
           setExperience(prev => prev + expGained);
           
-          // Calculate auto-click increment and save it
           const autoClickIncrement = calculateAutoClickIncrement(card.currentPrice);
           const currentAutoClick = loadGameData('autoClickPower', 0);
           const newAutoClick = currentAutoClick + autoClickIncrement;
           saveGameData('autoClickPower', newAutoClick);
           
-          // Track upgrades in localStorage
           const currentUpgrades = parseInt(localStorage.getItem('cardUpgrades') || '0');
           localStorage.setItem('cardUpgrades', (currentUpgrades + 1).toString());
           
@@ -797,7 +812,6 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         <p className="text-white text-sm mt-1">Upgrade your robotic companions</p>
       </div>
 
-      {/* Fixed width navbar with equal button distribution */}
       <div className="w-full">
         <div className="flex bg-gray-900/80 p-2 rounded-xl backdrop-blur-sm border border-gray-600">
           {categories.map((category) => {
@@ -824,7 +838,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
 
       <div className="grid grid-cols-2 gap-4">
         {filteredCards.map((card) => {
-          const Icon = card.icon;
+          const IconComponent = iconMap[card.iconName as keyof typeof iconMap];
           const remainingTime = getRemainingTime(card.cooldownEnd);
           const isOnCooldown = remainingTime > 0;
           const canAfford = coins >= card.currentPrice;
@@ -834,7 +848,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2">
                   <div className="p-2 rounded-lg bg-cyan-500/30 shadow-lg">
-                    <Icon className="w-5 h-5 text-cyan-200 drop-shadow-lg" />
+                    <IconComponent className="w-5 h-5 text-cyan-200 drop-shadow-lg" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-cyan-300 text-sm truncate drop-shadow-md">{card.name}</h3>
