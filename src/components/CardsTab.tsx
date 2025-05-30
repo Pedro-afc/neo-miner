@@ -5,6 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { Coins, Clock, TrendingUp, Zap, Shield, Gem, Heart, Rocket, Bolt, Sword, Target, Bot, Cpu, Wrench, Crown, Microscope } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { formatNumber, calculateAutoClickIncrement, saveGameData, loadGameData } from '@/utils/gameUtils';
+import { useTelegramAuth } from '@/hooks/useTelegramAuth';
+import StarAccelerationButton from './StarAccelerationButton';
 
 interface GameState {
   coins: number;
@@ -35,6 +37,17 @@ interface CardData {
 const CardsTab = ({ gameState }: { gameState: GameState }) => {
   const { coins, setCoins, setExperience } = gameState;
   const [activeCategory, setActiveCategory] = useState<'combat' | 'defense' | 'utility' | 'legendary' | 'nano'>('combat');
+  const { user } = useTelegramAuth();
+  
+  // Mock Telegram stars - in real implementation, this would come from Telegram API
+  const [telegramStars, setTelegramStars] = useState(() => {
+    return loadGameData('telegramStars', 50); // Start with 50 stars for demo
+  });
+
+  // Save telegram stars when it changes
+  useEffect(() => {
+    saveGameData('telegramStars', telegramStars);
+  }, [telegramStars]);
   
   // Helper function to get icon component from name
   const getIconComponent = (iconName: string) => {
@@ -800,6 +813,28 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
     );
   };
 
+  const accelerateWithStars = (cardId: string, starCost: number) => {
+    if (telegramStars < starCost) return;
+    
+    setTelegramStars(prev => prev - starCost);
+    
+    setCards(prevCards =>
+      prevCards.map(card => {
+        if (card.id === cardId && card.cooldownEnd) {
+          const remainingTime = card.cooldownEnd - Date.now();
+          const reducedTime = Math.floor(remainingTime * 0.5); // Reduce by 50%
+          const newCooldownEnd = Date.now() + reducedTime;
+          
+          return {
+            ...card,
+            cooldownEnd: newCooldownEnd > Date.now() ? newCooldownEnd : undefined
+          };
+        }
+        return card;
+      })
+    );
+  };
+
   const getRemainingTime = (cooldownEnd?: number) => {
     if (!cooldownEnd) return 0;
     const remaining = cooldownEnd - Date.now();
@@ -822,6 +857,14 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
           Robot Arsenal
         </h2>
         <p className="text-white text-sm mt-1">Upgrade your robotic companions</p>
+        
+        {/* Telegram Stars Display */}
+        {user && (
+          <div className="mt-2 flex items-center justify-center gap-2 bg-yellow-500/20 rounded-lg px-3 py-1 border border-yellow-500/30">
+            <span className="text-yellow-300 text-lg">⭐</span>
+            <span className="text-yellow-300 font-bold">{telegramStars} Estrellas</span>
+          </div>
+        )}
       </div>
 
       <div className="w-full">
@@ -892,6 +935,17 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
                       value={((card.upgradeTime - remainingTime) / card.upgradeTime) * 100} 
                       className="h-1 bg-gray-700"
                     />
+                    
+                    {/* Star Acceleration Button */}
+                    {user && (
+                      <StarAccelerationButton
+                        cardId={card.id}
+                        cardName={card.name}
+                        telegramStars={telegramStars}
+                        onAccelerate={accelerateWithStars}
+                        isOnCooldown={isOnCooldown}
+                      />
+                    )}
                   </div>
                 ) : (
                   <Button

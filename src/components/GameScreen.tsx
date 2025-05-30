@@ -5,6 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { Coins, Diamond, Zap } from 'lucide-react';
 import { loadGameData, saveGameData } from '@/utils/gameUtils';
+import { calculateOfflineEarnings, updateLastActiveTime } from '@/utils/backgroundMining';
+import OfflineEarningsModal from './OfflineEarningsModal';
 
 interface GameState {
   coins: number;
@@ -29,6 +31,53 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
   const [totalClicks, setTotalClicks] = useState(() => loadGameData('totalClicks', 0));
   const [clicksPerMinute, setClicksPerMinute] = useState(0);
   const [clickTimes, setClickTimes] = useState<number[]>([]);
+  const [showOfflineModal, setShowOfflineModal] = useState(false);
+  const [offlineEarnings, setOfflineEarnings] = useState({ coins: 0, experience: 0, timeOffline: 0 });
+
+  // Check for offline earnings on component mount
+  useEffect(() => {
+    const earnings = calculateOfflineEarnings();
+    if (earnings.coins > 0 || earnings.experience > 0) {
+      setOfflineEarnings(earnings);
+      setShowOfflineModal(true);
+    }
+    updateLastActiveTime();
+  }, []);
+
+  // Update last active time when user interacts or leaves
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        updateLastActiveTime();
+      } else {
+        const earnings = calculateOfflineEarnings();
+        if (earnings.coins > 0 || earnings.experience > 0) {
+          setOfflineEarnings(earnings);
+          setShowOfflineModal(true);
+        }
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      updateLastActiveTime();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // Update every 10 seconds when active
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        updateLastActiveTime();
+      }
+    }, 10000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Auto-click functionality
   useEffect(() => {
@@ -37,6 +86,7 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
     const interval = setInterval(() => {
       setCoins(prev => prev + autoClickPower);
       setExperience(prev => prev + 1);
+      updateLastActiveTime();
     }, 1000);
 
     return () => clearInterval(interval);
@@ -76,6 +126,9 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
     const now = Date.now();
     setClickTimes(prev => [...prev.slice(-59), now]);
     
+    // Update last active time
+    updateLastActiveTime();
+    
     // Add click effect
     const effectId = Date.now();
     setClickEffects(prev => [...prev, { id: effectId, x, y }]);
@@ -86,10 +139,23 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
     }, 600);
   };
 
+  const claimOfflineEarnings = () => {
+    setCoins(prev => prev + offlineEarnings.coins);
+    setExperience(prev => prev + offlineEarnings.experience);
+    updateLastActiveTime();
+  };
+
   const experiencePercentage = (experience / experienceRequired) * 100;
 
   return (
     <div className="space-y-6 max-w-md mx-auto">
+      <OfflineEarningsModal
+        isOpen={showOfflineModal}
+        onClose={() => setShowOfflineModal(false)}
+        earnings={offlineEarnings}
+        onClaim={claimOfflineEarnings}
+      />
+
       {/* Stats Header */}
       <div className="grid grid-cols-2 gap-4">
         <Card className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/30 p-4">

@@ -1,10 +1,11 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award, Sparkles, Gem, Globe, Clock, Wallet, Bot, Heart, TrendingUp } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
+import { useTelegramAuth } from '@/hooks/useTelegramAuth';
+import { loadGameData, saveGameData } from '@/utils/gameUtils';
 
 interface GameState {
   coins: number;
@@ -23,7 +24,7 @@ interface ShopItem {
   description: string;
   icon: any;
   price: number;
-  currency: 'coins' | 'diamonds' | 'ton';
+  currency: 'coins' | 'diamonds' | 'ton' | 'stars';
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
   effect: string;
   purchased?: boolean;
@@ -31,9 +32,16 @@ interface ShopItem {
 
 const ShopTab = ({ gameState }: { gameState: GameState }) => {
   const { coins, setCoins, diamonds, setDiamonds, setExperience } = gameState;
-  const [activeSection, setActiveSection] = useState<'coins' | 'diamonds' | 'ton'>('coins');
+  const [activeSection, setActiveSection] = useState<'coins' | 'diamonds' | 'ton' | 'stars'>('coins');
   const [tonWalletConnected, setTonWalletConnected] = useState(() => {
     return localStorage.getItem('tonWalletConnected') === 'true';
+  });
+  
+  const { user } = useTelegramAuth();
+  
+  // Mock Telegram stars - in real implementation, this would come from Telegram API
+  const [telegramStars, setTelegramStars] = useState(() => {
+    return loadGameData('telegramStars', 50); // Start with 50 stars for demo
   });
   
   const shopItems: ShopItem[] = [
@@ -221,6 +229,58 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       currency: 'ton',
       rarity: 'mythic',
       effect: 'God Mode x1 hora'
+    },
+
+    // NEW: Telegram Stars Items - Exclusive features
+    {
+      id: 'star_booster',
+      name: 'Acelerador Estelar',
+      description: 'Acelera todos los cooldowns por 30 minutos',
+      icon: Star,
+      price: 5,
+      currency: 'stars',
+      rarity: 'epic',
+      effect: 'No Cooldowns x30min'
+    },
+    {
+      id: 'stellar_multiplier',
+      name: 'Multiplicador Estelar',
+      description: 'Triplica ganancias de monedas por 1 hora',
+      icon: Sparkles,
+      price: 10,
+      currency: 'stars',
+      rarity: 'legendary',
+      effect: '+300% Coins x1h'
+    },
+    {
+      id: 'star_shield',
+      name: 'Escudo de Estrellas',
+      description: 'Protege contra pérdidas por 2 horas',
+      icon: Shield,
+      price: 15,
+      currency: 'stars',
+      rarity: 'legendary',
+      effect: 'Protection x2h'
+    },
+    {
+      id: 'cosmic_fortune',
+      name: 'Fortuna Cósmica',
+      description: 'Duplica todas las recompensas por 1 hora',
+      icon: Crown,
+      price: 25,
+      currency: 'stars',
+      rarity: 'mythic',
+      effect: '+100% All Rewards x1h'
+    },
+    {
+      id: 'star_factory',
+      name: 'Fábrica de Estrellas',
+      description: 'Genera 1 estrella cada 10 minutos por 1 hora',
+      icon: Target,
+      price: 20,
+      currency: 'stars',
+      rarity: 'mythic',
+      effect: '+1 Star/10min x1h'
     }
   ];
 
@@ -279,13 +339,25 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       return;
     }
 
+    if (item.currency === 'stars' && !user) {
+      toast({
+        description: "Necesitas estar conectado con Telegram para usar estrellas",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const canAfford = item.currency === 'coins' ? coins >= item.price : 
                      item.currency === 'diamonds' ? diamonds >= item.price :
+                     item.currency === 'stars' ? telegramStars >= item.price :
                      tonWalletConnected; // For TON, just check if wallet is connected
 
     if (!canAfford) {
+      const currencyName = item.currency === 'coins' ? 'monedas' : 
+                          item.currency === 'diamonds' ? 'diamantes' :
+                          item.currency === 'stars' ? 'estrellas' : 'TON';
       toast({
-        description: `No tienes suficientes ${item.currency === 'coins' ? 'monedas' : item.currency === 'diamonds' ? 'diamantes' : 'TON'} para comprar este item.`,
+        description: `No tienes suficientes ${currencyName} para comprar este item.`,
         variant: "destructive",
       });
       return;
@@ -295,6 +367,9 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       setCoins(prev => prev - item.price);
     } else if (item.currency === 'diamonds') {
       setDiamonds(prev => prev - item.price);
+    } else if (item.currency === 'stars') {
+      setTelegramStars(prev => prev - item.price);
+      saveGameData('telegramStars', telegramStars - item.price);
     }
     // For TON items, we simulate the purchase
 
@@ -351,6 +426,36 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
           variant: "default",
         });
         break;
+      // Star items effects
+      case 'star_booster':
+        toast({
+          description: "¡Acelerador Estelar activado! Sin cooldowns por 30 minutos",
+          variant: "default",
+        });
+        break;
+      case 'stellar_multiplier':
+        setCoins(prev => prev + 100000);
+        toast({
+          description: "¡Multiplicador Estelar activado! +100K Monedas bonus",
+          variant: "default",
+        });
+        break;
+      case 'cosmic_fortune':
+        setCoins(prev => prev + 200000);
+        setDiamonds(prev => prev + 50);
+        toast({
+          description: "¡Fortuna Cósmica activada! +200K Monedas, +50 Diamantes",
+          variant: "default",
+        });
+        break;
+      case 'star_factory':
+        setTelegramStars(prev => prev + 6); // Bonus 6 stars immediately
+        saveGameData('telegramStars', telegramStars + 6);
+        toast({
+          description: "¡Fábrica de Estrellas activada! +6 Estrellas bonus",
+          variant: "default",
+        });
+        break;
       default:
         setCoins(prev => prev + 20000);
         toast({
@@ -397,6 +502,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
   const coinsItems = shopItems.filter(item => item.currency === 'coins');
   const diamondsItems = shopItems.filter(item => item.currency === 'diamonds');
   const tonItems = shopItems.filter(item => item.currency === 'ton');
+  const starsItems = shopItems.filter(item => item.currency === 'stars');
 
   const renderShopItems = (items: ShopItem[]) => (
     <div className="space-y-4">
@@ -404,6 +510,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         const Icon = item.icon;
         const canAfford = item.currency === 'coins' ? coins >= item.price : 
                          item.currency === 'diamonds' ? diamonds >= item.price :
+                         item.currency === 'stars' ? telegramStars >= item.price :
                          tonWalletConnected;
         
         return (
@@ -429,16 +536,21 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
                 <div className={`flex items-center gap-2 ${
                   item.currency === 'coins' ? 'text-yellow-300' : 
                   item.currency === 'diamonds' ? 'text-blue-300' :
+                  item.currency === 'stars' ? 'text-yellow-300' :
                   'text-cyan-300'
                 }`}>
                   {item.currency === 'coins' ? 
                     <Coins className="w-5 h-5 drop-shadow-lg" /> : 
                     item.currency === 'diamonds' ?
                     <Diamond className="w-5 h-5 drop-shadow-lg" /> :
+                    item.currency === 'stars' ?
+                    <span className="text-lg">⭐</span> :
                     <Wallet className="w-5 h-5 drop-shadow-lg" />
                   }
                   <span className="font-bold text-lg drop-shadow-md">
-                    {item.currency === 'ton' ? `${item.price} TON` : item.price.toLocaleString()}
+                    {item.currency === 'ton' ? `${item.price} TON` : 
+                     item.currency === 'stars' ? `${item.price}` :
+                     item.price.toLocaleString()}
                   </span>
                 </div>
                 
@@ -532,6 +644,18 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
           <span className="font-bold">DIAMANTES</span>
         </Button>
         <Button
+          onClick={() => setActiveSection('stars')}
+          variant="ghost"
+          className={`flex-1 flex items-center justify-center gap-2 rounded-lg transition-all duration-200 ${
+            activeSection === 'stars' 
+              ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg' 
+              : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+          }`}
+        >
+          <span className="text-lg">⭐</span>
+          <span className="font-bold">ESTRELLAS</span>
+        </Button>
+        <Button
           onClick={() => setActiveSection('ton')}
           variant="ghost"
           className={`flex-1 flex items-center justify-center gap-2 rounded-lg transition-all duration-200 ${
@@ -549,20 +673,21 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       <div className="mt-6">
         {activeSection === 'coins' && renderShopItems(coinsItems)}
         {activeSection === 'diamonds' && renderShopItems(diamondsItems)}
+        {activeSection === 'stars' && renderShopItems(starsItems)}
         {activeSection === 'ton' && renderShopItems(tonItems)}
       </div>
 
       {/* Current Balance */}
       <Card className="bg-gray-900/80 backdrop-blur-sm border-2 border-gray-600 p-6">
         <h3 className="text-xl font-bold text-white mb-4 drop-shadow-md">Tu Balance</h3>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-lg bg-yellow-500/20">
               <Coins className="w-6 h-6 text-yellow-400 drop-shadow-lg" />
             </div>
             <div>
               <p className="text-sm text-gray-300 font-medium">Monedas</p>
-              <p className="text-2xl font-bold text-yellow-400 drop-shadow-md">{coins.toLocaleString()}</p>
+              <p className="text-xl font-bold text-yellow-400 drop-shadow-md">{coins.toLocaleString()}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -571,9 +696,20 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
             </div>
             <div>
               <p className="text-sm text-gray-300 font-medium">Diamantes</p>
-              <p className="text-2xl font-bold text-blue-400 drop-shadow-md">{diamonds.toLocaleString()}</p>
+              <p className="text-xl font-bold text-blue-400 drop-shadow-md">{diamonds.toLocaleString()}</p>
             </div>
           </div>
+          {user && (
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-lg bg-yellow-500/20">
+                <span className="text-2xl">⭐</span>
+              </div>
+              <div>
+                <p className="text-sm text-gray-300 font-medium">Estrellas</p>
+                <p className="text-xl font-bold text-yellow-400 drop-shadow-md">{telegramStars}</p>
+              </div>
+            </div>
+          )}
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-lg bg-cyan-500/20">
               <Wallet className="w-6 h-6 text-cyan-400 drop-shadow-lg" />

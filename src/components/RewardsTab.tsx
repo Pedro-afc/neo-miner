@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -68,6 +67,10 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
 
   const [upgradeRewardCooldowns, setUpgradeRewardCooldowns] = useState<Record<string, number>>(() => {
     return loadGameData('upgradeRewardCooldowns', {});
+  });
+
+  const [completedCycles, setCompletedCycles] = useState(() => {
+    return loadGameData('completedCycles', 0);
   });
 
   // Get current upgrade count
@@ -199,6 +202,10 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
     saveGameData('upgradeRewardCooldowns', upgradeRewardCooldowns);
   }, [upgradeRewardCooldowns]);
 
+  useEffect(() => {
+    saveGameData('completedCycles', completedCycles);
+  }, [completedCycles]);
+
   // Check if daily reward can be claimed
   const canClaimDaily = () => {
     const today = new Date().toDateString();
@@ -217,6 +224,27 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
     const twelveHours = 12 * 60 * 60 * 1000;
     const elapsed = Date.now() - reward.claimedAt;
     return Math.max(0, twelveHours - elapsed);
+  };
+
+  const resetDailyRewards = () => {
+    const resetRewards = [
+      { day: 1, type: 'coins' as const, amount: 1000, claimed: false },
+      { day: 2, type: 'coins' as const, amount: 2000, claimed: false },
+      { day: 3, type: 'diamonds' as const, amount: 5, claimed: false },
+      { day: 4, type: 'coins' as const, amount: 5000, claimed: false },
+      { day: 5, type: 'experience' as const, amount: 50000, claimed: false },
+      { day: 6, type: 'diamonds' as const, amount: 10, claimed: false },
+      { day: 7, type: 'coins' as const, amount: 10000, claimed: false }
+    ];
+    
+    setDailyRewards(resetRewards);
+    setCurrentDay(1);
+    setCompletedCycles(prev => prev + 1);
+    
+    toast({
+      description: `¡Ciclo de recompensas completado! Ciclo #${completedCycles + 1} iniciado`,
+      variant: "default",
+    });
   };
 
   const claimDailyReward = (day: number) => {
@@ -258,16 +286,15 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
     // Update claim date and advance day
     const today = new Date().toDateString();
     setLastClaimDate(today);
-    setCurrentDay(prev => (prev % 7) + 1);
-
-    // Reset all daily rewards for next cycle
+    
+    // Check if this was day 7 (last day)
     if (day === 7) {
+      // Reset after 3 seconds to show completion
       setTimeout(() => {
-        setDailyRewards(prev =>
-          prev.map(r => ({ ...r, claimed: false }))
-        );
-        setCurrentDay(1);
-      }, 100);
+        resetDailyRewards();
+      }, 3000);
+    } else {
+      setCurrentDay(prev => prev + 1);
     }
   };
 
@@ -334,7 +361,7 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
 
       {/* Stats Display */}
       <Card className="bg-gray-900/80 backdrop-blur-sm border-2 border-gray-600 p-4">
-        <div className="grid grid-cols-2 gap-4 text-center">
+        <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <TrendingUp className="w-6 h-6 mx-auto text-cyan-400 mb-2" />
             <p className="text-sm text-gray-300">Mejoras Realizadas</p>
@@ -344,6 +371,11 @@ const RewardsTab = ({ gameState }: { gameState: GameState }) => {
             <Star className="w-6 h-6 mx-auto text-purple-400 mb-2" />
             <p className="text-sm text-gray-300">Nivel Actual</p>
             <p className="text-2xl font-bold text-purple-400">{level}</p>
+          </div>
+          <div>
+            <Calendar className="w-6 h-6 mx-auto text-green-400 mb-2" />
+            <p className="text-sm text-gray-300">Ciclos Completados</p>
+            <p className="text-2xl font-bold text-green-400">{completedCycles}</p>
           </div>
         </div>
       </Card>
