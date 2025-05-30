@@ -48,8 +48,8 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-white text-xl">Cargando...</div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center px-4">
+        <div className="text-white text-lg md:text-xl">Loading...</div>
       </div>
     );
   }
@@ -64,8 +64,8 @@ const Index = () => {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(120,119,198,0.3),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,119,198,0.3),transparent_50%)]" />
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-h-screen pb-20">
-        <div className="container mx-auto px-4 pt-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-h-screen pb-16 md:pb-20">
+        <div className="container mx-auto px-3 md:px-6 lg:px-8 pt-4 md:pt-6 max-w-sm md:max-w-4xl lg:max-w-6xl">
           <UserProfile user={user} onLogout={logout} />
           
           <TabsContent value="home" className="mt-0">

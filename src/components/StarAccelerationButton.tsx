@@ -31,7 +31,7 @@ const StarAccelerationButton = ({
     onAccelerate(cardId, starCost);
     
     toast({
-      description: `¡${cardName} acelerado con estrella! -50% tiempo de espera`,
+      description: `${cardName} accelerated with star! -50% cooldown time`,
       variant: "default",
     });
 
@@ -48,7 +48,7 @@ const StarAccelerationButton = ({
       onClick={handleAccelerate}
       disabled={!canAccelerate}
       size="sm"
-      className={`relative overflow-hidden transition-all duration-300 ${
+      className={`relative overflow-hidden transition-all duration-300 min-h-[36px] md:min-h-[40px] text-xs md:text-sm ${
         canAccelerate 
           ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white shadow-lg' 
           : 'bg-gray-600 cursor-not-allowed text-gray-400'
@@ -61,7 +61,7 @@ const StarAccelerationButton = ({
             {[...Array(6)].map((_, i) => (
               <Sparkles
                 key={i}
-                className={`absolute w-3 h-3 text-yellow-300 animate-ping opacity-75`}
+                className={`absolute w-2 h-2 md:w-3 md:h-3 text-yellow-300 animate-ping opacity-75`}
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
@@ -73,8 +73,8 @@ const StarAccelerationButton = ({
         </>
       )}
       
-      <Star className="w-3 h-3 mr-1" />
-      <Zap className="w-3 h-3 mr-1" />
+      <Star className="w-2 h-2 md:w-3 md:h-3 mr-1" />
+      <Zap className="w-2 h-2 md:w-3 md:h-3 mr-1" />
       <span className="text-xs font-bold">
         {starCost} ⭐
       </span>
