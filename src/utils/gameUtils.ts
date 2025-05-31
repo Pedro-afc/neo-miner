@@ -20,5 +20,13 @@ export const saveGameData = (key: string, data: any) => {
 
 export const loadGameData = (key: string, defaultValue: any = null) => {
   const saved = localStorage.getItem(key);
-  return saved ? JSON.parse(saved) : defaultValue;
+  if (!saved) return defaultValue;
+  
+  try {
+    return JSON.parse(saved);
+  } catch (error) {
+    // If parsing fails, return the raw string (for backwards compatibility with plain string dates)
+    console.warn(`Failed to parse JSON for key "${key}": ${error}. Using raw value.`);
+    return saved;
+  }
 };
