@@ -31,10 +31,14 @@ export const useUserCards = () => {
     if (!user) return;
 
     try {
+      // Get the authenticated user's UUID
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+
       const { data, error } = await supabase
         .from('user_cards')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', authUser.id);
 
       if (error) throw error;
 
@@ -61,6 +65,10 @@ export const useUserCards = () => {
     if (!user || !progress) return false;
 
     try {
+      // Get the authenticated user's UUID
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return false;
+
       const existingCard = getCard(cardId);
       
       if (existingCard) {
@@ -73,7 +81,7 @@ export const useUserCards = () => {
             exp_bonus: newExpBonus,
             cooldown_end: new Date(Date.now() + 10000).toISOString() // 10 second cooldown
           })
-          .eq('user_id', user.id)
+          .eq('user_id', authUser.id)
           .eq('card_id', cardId);
 
         if (error) throw error;
@@ -82,7 +90,7 @@ export const useUserCards = () => {
         const { error } = await supabase
           .from('user_cards')
           .insert({
-            user_id: user.id,
+            user_id: authUser.id,
             card_id: cardId,
             level: newLevel,
             current_price: newPrice,

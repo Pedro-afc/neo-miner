@@ -55,10 +55,14 @@ export const useUserProgress = () => {
     if (!user) return;
 
     try {
+      // Get the authenticated user's UUID
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+
       const { data, error } = await supabase
         .from('user_progress')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', authUser.id)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -83,10 +87,14 @@ export const useUserProgress = () => {
     if (!user || !progress) return;
 
     try {
+      // Get the authenticated user's UUID
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return;
+
       const { error } = await supabase
         .from('user_progress')
         .update(updates)
-        .eq('user_id', user.id);
+        .eq('user_id', authUser.id);
 
       if (error) throw error;
 
