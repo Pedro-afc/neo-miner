@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GameScreen from '@/components/GameScreen';
 import CardsTab from '@/components/CardsTab';
@@ -10,43 +10,18 @@ import Navbar from '@/components/Navbar';
 import UserProfile from '@/components/UserProfile';
 import TelegramLogin from '@/components/TelegramLogin';
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
+import { useUserProgress } from '@/hooks/useUserProgress';
 
 const Index = () => {
   const { user, isLoading, isAuthenticated, logout } = useTelegramAuth();
+  const { progress, loading: progressLoading, addCoins, addDiamonds, addExperience } = useUserProgress();
   const [activeTab, setActiveTab] = useState('home');
-  const [coins, setCoins] = useState(0);
-  const [diamonds, setDiamonds] = useState(10);
-  const [level, setLevel] = useState(1);
-  const [experience, setExperience] = useState(0);
-  const [experienceRequired, setExperienceRequired] = useState(300000);
-
-  // Calculate level progression
-  useEffect(() => {
-    if (experience >= experienceRequired) {
-      setLevel(prev => prev + 1);
-      setExperience(0);
-      setExperienceRequired(prev => prev * 2);
-    }
-  }, [experience, experienceRequired]);
-
-  const gameState = {
-    coins,
-    setCoins,
-    diamonds,
-    setDiamonds,
-    level,
-    experience,
-    setExperience,
-    experienceRequired
-  };
 
   const handleLogin = () => {
-    // The useTelegramAuth hook handles the login automatically
-    // This function exists for cases where manual login might be needed
     window.location.reload();
   };
 
-  if (isLoading) {
+  if (isLoading || progressLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center px-4">
         <div className="text-white text-lg md:text-xl">Loading...</div>
@@ -54,9 +29,29 @@ const Index = () => {
     );
   }
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated || !user || !progress) {
     return <TelegramLogin onLogin={handleLogin} />;
   }
+
+  const gameState = {
+    coins: progress.coins,
+    setCoins: (value: number | ((prev: number) => number)) => {
+      const newValue = typeof value === 'function' ? value(progress.coins) : value;
+      addCoins(newValue - progress.coins);
+    },
+    diamonds: progress.diamonds,
+    setDiamonds: (value: number | ((prev: number) => number)) => {
+      const newValue = typeof value === 'function' ? value(progress.diamonds) : value;
+      addDiamonds(newValue - progress.diamonds);
+    },
+    level: progress.level,
+    experience: progress.experience,
+    setExperience: (value: number | ((prev: number) => number)) => {
+      const newValue = typeof value === 'function' ? value(progress.experience) : value;
+      addExperience(newValue - progress.experience);
+    },
+    experienceRequired: progress.experience_required
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
@@ -69,7 +64,7 @@ const Index = () => {
           <UserProfile user={user} onLogout={logout} />
           
           <TabsContent value="home" className="mt-0">
-            <GameScreen gameState={gameState} />
+            <GameScreen gameState={gameState} autoClickPower={progress.auto_click_power} />
           </TabsContent>
           
           <TabsContent value="cards" className="mt-0">
@@ -81,7 +76,7 @@ const Index = () => {
           </TabsContent>
           
           <TabsContent value="shop" className="mt-0">
-            <ShopTab gameState={gameState} />
+            <ShopTab gameState={gameState} telegramStars={progress.telegram_stars} />
           </TabsContent>
           
           <TabsContent value="airdrop" className="mt-0">

@@ -21,13 +21,13 @@ interface GameState {
 
 interface GameScreenProps {
   gameState: GameState;
+  autoClickPower: number;
 }
 
-const GameScreen = ({ gameState }: GameScreenProps) => {
+const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
   const { coins, setCoins, diamonds, level, experience, setExperience, experienceRequired } = gameState;
   const [clickPower, setClickPower] = useState(1);
   const [clickEffects, setClickEffects] = useState<Array<{ id: number; x: number; y: number }>>([]);
-  const [autoClickPower, setAutoClickPower] = useState(() => loadGameData('autoClickPower', 0));
   const [totalClicks, setTotalClicks] = useState(() => loadGameData('totalClicks', 0));
   const [clicksPerMinute, setClicksPerMinute] = useState(0);
   const [clickTimes, setClickTimes] = useState<number[]>([]);
@@ -79,7 +79,7 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
     };
   }, []);
 
-  // Auto-click functionality
+  // Auto-click functionality using database auto-click power
   useEffect(() => {
     if (autoClickPower <= 0) return;
 
@@ -91,16 +91,6 @@ const GameScreen = ({ gameState }: GameScreenProps) => {
 
     return () => clearInterval(interval);
   }, [autoClickPower, setCoins, setExperience]);
-
-  // Load auto-click power from localStorage periodically
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const savedAutoClick = loadGameData('autoClickPower', 0);
-      setAutoClickPower(savedAutoClick);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Calculate clicks per minute
   useEffect(() => {

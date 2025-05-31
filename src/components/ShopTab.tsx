@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award, Sparkles, Gem, Globe, Clock, Wallet, Bot, Heart, TrendingUp } from 'lucide-react';
+import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame, Shield, Target, Award, Sparkles, Gem, Globe, Clock, Wallet, Bot, Heart, TrendingUp, Orbit, Satellite, Atom, Infinity } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
-import { loadGameData, saveGameData } from '@/utils/gameUtils';
+import { useUserProgress } from '@/hooks/useUserProgress';
 
 interface GameState {
   coins: number;
@@ -30,7 +30,7 @@ interface ShopItem {
   purchased?: boolean;
 }
 
-const ShopTab = ({ gameState }: { gameState: GameState }) => {
+const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramStars: number }) => {
   const { coins, setCoins, diamonds, setDiamonds, setExperience } = gameState;
   const [activeSection, setActiveSection] = useState<'coins' | 'diamonds' | 'ton' | 'stars'>('coins');
   const [tonWalletConnected, setTonWalletConnected] = useState(() => {
@@ -38,11 +38,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
   });
   
   const { user } = useTelegramAuth();
-  
-  // Mock Telegram stars - in real implementation, this would come from Telegram API
-  const [telegramStars, setTelegramStars] = useState(() => {
-    return loadGameData('telegramStars', 50); // Start with 50 stars for demo
-  });
+  const { addDiamonds } = useUserProgress();
   
   const shopItems: ShopItem[] = [
     // Coins Items - Game-related rewards
@@ -179,59 +175,59 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       effect: 'All Boosts x1 hour'
     },
 
-    // TON Items - Exclusive and special
+    // NEW COSMIC THEME TON ITEMS
     {
-      id: 'nft_robot_ton',
-      name: 'Exclusive NFT Robot',
-      description: 'Unique robot only available with TON',
-      icon: Bot,
+      id: 'galactic_outpost',
+      name: 'Galactic Mining Outpost',
+      description: 'Establish your first base in deep space for cosmic resource extraction',
+      icon: Satellite,
       price: 0.5,
       currency: 'ton',
       rarity: 'mythic',
-      effect: 'Permanent NFT Robot'
+      effect: 'Permanent +1000% Mining Efficiency'
     },
     {
-      id: 'ton_multiplier',
-      name: 'TON Multiplier',
-      description: 'Multiplies all earnings by 10',
-      icon: Zap,
+      id: 'stellar_command',
+      name: 'Stellar Command Center',
+      description: 'Command your intergalactic fleet from this advanced space station',
+      icon: Orbit,
       price: 1.0,
       currency: 'ton',
       rarity: 'mythic',
-      effect: '+1000% All Gains x24h'
+      effect: 'Control Space Fleet +2000% All Gains x24h'
     },
     {
-      id: 'cosmic_upgrade',
-      name: 'Cosmic Upgrade',
-      description: 'Upgrades all cards to maximum level',
-      icon: Star,
+      id: 'alien_tech_core',
+      name: 'Alien Technology Core',
+      description: 'Harness ancient alien artifacts to unlock forbidden technologies',
+      icon: Atom,
       price: 1.5,
       currency: 'ton',
       rarity: 'mythic',
-      effect: 'Max Level All Cards'
+      effect: 'Alien Tech Integration +5000% EXP x48h'
     },
     {
-      id: 'infinity_token',
-      name: 'Infinity Token',
-      description: 'Unlimited resources for 1 hour',
-      icon: Gem,
+      id: 'cosmic_empire_crown',
+      name: 'Cosmic Empire Crown',
+      description: 'Rule over entire galaxies with this legendary crown of cosmic power',
+      icon: Crown,
       price: 2.0,
       currency: 'ton',
       rarity: 'mythic',
-      effect: 'Infinite Resources x1h'
+      effect: 'Galactic Dominion +10000% All Resources x72h'
     },
     {
-      id: 'god_mode_ton',
-      name: 'God Mode TON',
-      description: 'Absolute supreme power',
-      icon: Crown,
+      id: 'universal_domination',
+      name: 'Universal Domination Protocol',
+      description: 'Achieve absolute control over the known universe and beyond',
+      icon: Infinity,
       price: 5.0,
       currency: 'ton',
       rarity: 'mythic',
-      effect: 'God Mode x1 hour'
+      effect: 'Universal Power - Infinite Resources x168h'
     },
 
-    // Telegram Stars Items - Exclusive features (prices multiplied by 10)
+    // Stars Items - Exclusive features (prices multiplied by 10)
     {
       id: 'star_booster',
       name: 'Stellar Booster',
@@ -284,14 +280,51 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
     }
   ];
 
+  // Diamond packages for TON purchase
+  const diamondPackages = [
+    {
+      id: 'diamonds_10',
+      name: '10 Diamonds',
+      description: 'Perfect starter pack for beginners',
+      amount: 10,
+      price: 10,
+      icon: Diamond,
+      rarity: 'common' as const
+    },
+    {
+      id: 'diamonds_50',
+      name: '50 Diamonds',
+      description: 'Popular choice for active players',
+      amount: 50,
+      price: 50,
+      icon: Diamond,
+      rarity: 'rare' as const
+    },
+    {
+      id: 'diamonds_100',
+      name: '100 Diamonds',
+      description: 'Great value for serious gamers',
+      amount: 100,
+      price: 100,
+      icon: Diamond,
+      rarity: 'epic' as const
+    },
+    {
+      id: 'diamonds_500',
+      name: '500 Diamonds',
+      description: 'Ultimate diamond package for champions',
+      amount: 500,
+      price: 500,
+      icon: Diamond,
+      rarity: 'legendary' as const
+    }
+  ];
+
   const connectTonWallet = async () => {
     try {
-      // Simulate TON wallet connection with better detection
       if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
-        // Check if we're in Telegram WebApp
         const webApp = (window as any).Telegram.WebApp;
         
-        // Simulate TON Connect integration
         setTonWalletConnected(true);
         localStorage.setItem('tonWalletConnected', 'true');
         
@@ -300,11 +333,9 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
           variant: "default",
         });
         
-        // Simulate wallet address (in real implementation, this would come from TON Connect)
         localStorage.setItem('tonWalletAddress', 'UQAbc123...def456');
         
       } else {
-        // Fallback for testing outside Telegram
         setTonWalletConnected(true);
         localStorage.setItem('tonWalletConnected', 'true');
         toast({
@@ -330,6 +361,24 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
     });
   };
 
+  const buyDiamonds = async (packageItem: typeof diamondPackages[0]) => {
+    if (!tonWalletConnected) {
+      toast({
+        description: "You need to connect your TON Wallet first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // In real implementation, this would process the TON payment
+    await addDiamonds(packageItem.amount);
+    
+    toast({
+      description: `Successfully purchased ${packageItem.amount} diamonds for ${packageItem.price} TON!`,
+      variant: "default",
+    });
+  };
+
   const buyItem = (item: ShopItem) => {
     if (item.currency === 'ton' && !tonWalletConnected) {
       toast({
@@ -350,7 +399,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
     const canAfford = item.currency === 'coins' ? coins >= item.price : 
                      item.currency === 'diamonds' ? diamonds >= item.price :
                      item.currency === 'stars' ? telegramStars >= item.price :
-                     tonWalletConnected; // For TON, just check if wallet is connected
+                     tonWalletConnected;
 
     if (!canAfford) {
       const currencyName = item.currency === 'coins' ? 'coins' : 
@@ -367,122 +416,48 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
       setCoins(prev => prev - item.price);
     } else if (item.currency === 'diamonds') {
       setDiamonds(prev => prev - item.price);
-    } else if (item.currency === 'stars') {
-      setTelegramStars(prev => prev - item.price);
-      saveGameData('telegramStars', telegramStars - item.price);
     }
-    // For TON items, we simulate the purchase
 
     // Apply specific effects based on item
     switch (item.id) {
-      case 'auto_clicker':
+      case 'galactic_outpost':
+        setCoins(prev => prev + 2000000);
         toast({
-          description: "Auto Clicker activated for 1 hour!",
+          description: "Galactic Mining Outpost established! +2M Coins, +1000% Mining Efficiency",
           variant: "default",
         });
         break;
-      case 'coin_magnet':
-        setCoins(prev => prev + 25000);
-        toast({
-          description: "Coin Magnet activated! +25,000 coins bonus",
-          variant: "default",
-        });
-        break;
-      case 'exp_multiplier':
-        setExperience(prev => prev + 100000);
-        toast({
-          description: "EXP Multiplier activated! +100,000 EXP",
-          variant: "default",
-        });
-        break;
-      case 'robot_army':
-        setCoins(prev => prev + 75000);
-        toast({
-          description: "Robotic Army activated! +75,000 coins bonus",
-          variant: "default",
-        });
-        break;
-      case 'golden_touch':
-        setCoins(prev => prev + 150000);
-        toast({
-          description: "Golden Touch activated! +150,000 coins bonus",
-          variant: "default",
-        });
-        break;
-      case 'instant_upgrade':
-        setCoins(prev => prev + 50000);
-        toast({
-          description: "Instant Upgrade available! +50,000 coins",
-          variant: "default",
-        });
-        break;
-      case 'premium_robot':
-        setCoins(prev => prev + 200000);
-        toast({
-          description: "Premium Robot activated! +200,000 coins bonus",
-          variant: "default",
-        });
-        break;
-      case 'ultimate_package':
-        setCoins(prev => prev + 500000);
-        setDiamonds(prev => prev + 100);
-        toast({
-          description: "Supreme Package activated! +500K coins, +100 diamonds",
-          variant: "default",
-        });
-        break;
-      case 'level_boost':
-        setExperience(prev => prev + 500000);
-        toast({
-          description: "Level Boost activated! +500,000 EXP",
-          variant: "default",
-        });
-        break;
-      case 'nft_robot_ton':
-        setCoins(prev => prev + 1000000);
-        setExperience(prev => prev + 1000000);
-        toast({
-          description: "Exclusive NFT Robot acquired! +1M Coins and +1M EXP",
-          variant: "default",
-        });
-        break;
-      case 'god_mode_ton':
+      case 'stellar_command':
         setCoins(prev => prev + 5000000);
-        setDiamonds(prev => prev + 1000);
-        setExperience(prev => prev + 5000000);
+        setExperience(prev => prev + 2000000);
         toast({
-          description: "GOD MODE ACTIVATED! +5M Coins, +1K Diamonds, +5M EXP",
+          description: "Stellar Command Center activated! +5M Coins, +2M EXP, Fleet Control Online",
           variant: "default",
         });
         break;
-      // Star items effects
-      case 'star_booster':
+      case 'alien_tech_core':
+        setExperience(prev => prev + 10000000);
+        setCoins(prev => prev + 3000000);
         toast({
-          description: "Stellar Booster activated! No cooldowns for 30 minutes",
+          description: "Alien Technology Core integrated! +10M EXP, +3M Coins, Ancient Power Unlocked",
           variant: "default",
         });
         break;
-      case 'stellar_multiplier':
-        setCoins(prev => prev + 100000);
+      case 'cosmic_empire_crown':
+        setCoins(prev => prev + 20000000);
+        setDiamonds(prev => prev + 5000);
+        setExperience(prev => prev + 15000000);
         toast({
-          description: "Stellar Multiplier activated! +100K Coins bonus",
+          description: "COSMIC EMPIRE CROWN CLAIMED! +20M Coins, +5K Diamonds, +15M EXP, Galactic Ruler!",
           variant: "default",
         });
         break;
-      case 'cosmic_fortune':
-        setCoins(prev => prev + 200000);
-        setDiamonds(prev => prev + 50);
+      case 'universal_domination':
+        setCoins(prev => prev + 100000000);
+        setDiamonds(prev => prev + 25000);
+        setExperience(prev => prev + 50000000);
         toast({
-          description: "Cosmic Fortune activated! +200K Coins, +50 Diamonds",
-          variant: "default",
-        });
-        break;
-      case 'cosmic_accelerator':
-        setCoins(prev => prev + 300000);
-        setTelegramStars(prev => prev + 20);
-        saveGameData('telegramStars', telegramStars + 20);
-        toast({
-          description: "Cosmic Accelerator activated! +300K Coins, +20 Stars",
+          description: "UNIVERSAL DOMINATION ACHIEVED! +100M Coins, +25K Diamonds, +50M EXP, UNIVERSE CONQUERED!",
           variant: "default",
         });
         break;
@@ -605,13 +580,69 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
     </div>
   );
 
+  const renderDiamondPackages = () => (
+    <div className="space-y-4">
+      <div className="text-center mb-6">
+        <h3 className="text-2xl font-bold text-cyan-300 mb-2">💎 Diamond Packages</h3>
+        <p className="text-white">Buy diamonds with TON - 1 Diamond = 1 TON</p>
+      </div>
+      
+      {diamondPackages.map((pkg) => {
+        const Icon = pkg.icon;
+        
+        return (
+          <Card key={pkg.id} className={`bg-gradient-to-r ${getRarityColor(pkg.rarity)} p-4 border-2 backdrop-blur-sm`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-blue-500/30 backdrop-blur-sm">
+                  <Icon className="w-8 h-8 text-blue-300 drop-shadow-lg" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="font-bold text-white text-xl drop-shadow-md">{pkg.name}</h3>
+                    <Badge className={getRarityBadgeColor(pkg.rarity)}>
+                      {pkg.rarity.toUpperCase()}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-white/90 mb-2 drop-shadow-sm">{pkg.description}</p>
+                  <p className="text-lg text-blue-300 font-bold drop-shadow-sm">+{pkg.amount} Diamonds</p>
+                </div>
+              </div>
+              
+              <div className="text-right flex flex-col items-end gap-3">
+                <div className="flex items-center gap-2 text-cyan-300">
+                  <Wallet className="w-5 h-5 drop-shadow-lg" />
+                  <span className="font-bold text-xl drop-shadow-md">{pkg.price} TON</span>
+                </div>
+                
+                <Button
+                  onClick={() => buyDiamonds(pkg)}
+                  disabled={!tonWalletConnected}
+                  size="sm"
+                  className={`${
+                    tonWalletConnected
+                      ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 border-0 text-white' 
+                      : 'bg-gray-700 cursor-not-allowed border-0 text-gray-400'
+                  } font-bold px-6 py-2`}
+                >
+                  <ShoppingBag className="w-4 h-4 mr-2" />
+                  BUY NOW
+                </Button>
+              </div>
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-20">
       <div className="text-center">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent drop-shadow-lg">
-          Shop
+          Cosmic Shop
         </h2>
-        <p className="text-white text-base mt-2 font-semibold drop-shadow-md">Enhance your gaming experience</p>
+        <p className="text-white text-base mt-2 font-semibold drop-shadow-md">Enhance your galactic empire</p>
       </div>
 
       {/* Enhanced TON Wallet Connection */}
@@ -624,7 +655,7 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
                 {tonWalletConnected ? 'TON Wallet Connected' : 'Connect your TON Wallet'}
               </h3>
               <p className={`text-sm ${tonWalletConnected ? 'text-green-300' : 'text-cyan-300'}`}>
-                {tonWalletConnected ? 'Full access to exclusive TON items' : 'Access exclusive items with TON'}
+                {tonWalletConnected ? 'Full access to exclusive cosmic items & diamond purchases' : 'Access exclusive items and buy diamonds with TON'}
               </p>
             </div>
           </div>
@@ -704,7 +735,18 @@ const ShopTab = ({ gameState }: { gameState: GameState }) => {
         {activeSection === 'coins' && renderShopItems(coinsItems)}
         {activeSection === 'diamonds' && renderShopItems(diamondsItems)}
         {activeSection === 'stars' && renderShopItems(starsItems)}
-        {activeSection === 'ton' && renderShopItems(tonItems)}
+        {activeSection === 'ton' && (
+          <div className="space-y-8">
+            {renderDiamondPackages()}
+            <div className="border-t border-gray-600 pt-6">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-purple-300 mb-2">🌌 Cosmic Empire Collection</h3>
+                <p className="text-white">Ultimate cosmic power items for galactic domination</p>
+              </div>
+              {renderShopItems(tonItems)}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Current Balance */}

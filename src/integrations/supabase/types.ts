@@ -42,6 +42,117 @@ export type Database = {
         }
         Relationships: []
       }
+      user_cards: {
+        Row: {
+          card_id: string
+          cooldown_end: string | null
+          created_at: string
+          current_price: number
+          exp_bonus: number
+          id: string
+          level: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_id: string
+          cooldown_end?: string | null
+          created_at?: string
+          current_price: number
+          exp_bonus: number
+          id?: string
+          level?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_id?: string
+          cooldown_end?: string | null
+          created_at?: string
+          current_price?: number
+          exp_bonus?: number
+          id?: string
+          level?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_progress: {
+        Row: {
+          auto_click_power: number
+          coins: number
+          created_at: string
+          diamonds: number
+          experience: number
+          experience_required: number
+          id: string
+          last_daily_reward: string | null
+          level: number
+          telegram_stars: number
+          updated_at: string
+          upgrade_rewards_claimed: number
+          user_id: string
+        }
+        Insert: {
+          auto_click_power?: number
+          coins?: number
+          created_at?: string
+          diamonds?: number
+          experience?: number
+          experience_required?: number
+          id?: string
+          last_daily_reward?: string | null
+          level?: number
+          telegram_stars?: number
+          updated_at?: string
+          upgrade_rewards_claimed?: number
+          user_id: string
+        }
+        Update: {
+          auto_click_power?: number
+          coins?: number
+          created_at?: string
+          diamonds?: number
+          experience?: number
+          experience_required?: number
+          id?: string
+          last_daily_reward?: string | null
+          level?: number
+          telegram_stars?: number
+          updated_at?: string
+          upgrade_rewards_claimed?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_shop_purchases: {
+        Row: {
+          created_at: string
+          effect_expires_at: string | null
+          id: string
+          item_id: string
+          purchase_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          effect_expires_at?: string | null
+          id?: string
+          item_id: string
+          purchase_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          effect_expires_at?: string | null
+          id?: string
+          item_id?: string
+          purchase_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
