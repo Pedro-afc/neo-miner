@@ -51,26 +51,20 @@ export const useTelegramAuth = () => {
             console.log('Telegram user detected:', telegramUser);
             await authenticateWithSupabase(telegramUser);
           } else {
-            console.log('No Telegram user found');
-            // If no Telegram user, try to get from localStorage for development
-            const savedUser = localStorage.getItem('telegram_user');
-            if (savedUser) {
-              const parsedUser = JSON.parse(savedUser);
-              await authenticateWithSupabase(parsedUser);
-            }
+            console.log('No Telegram user found in WebApp');
+            setError('No se pudo obtener información del usuario de Telegram');
+            toast({
+              description: "No se pudo conectar con Telegram",
+              variant: "destructive",
+            });
           }
         } else {
-          console.log('Not in Telegram WebApp, using mock user for development');
-          // Development mode - create a mock user
-          const mockUser: TelegramUser = {
-            id: 123456789,
-            first_name: 'Demo',
-            last_name: 'User',
-            username: 'demouser'
-          };
-          
-          localStorage.setItem('telegram_user', JSON.stringify(mockUser));
-          await authenticateWithSupabase(mockUser);
+          console.log('Not running in Telegram WebApp environment');
+          setError('Esta aplicación debe ejecutarse dentro de Telegram');
+          toast({
+            description: "Por favor, abre esta aplicación desde Telegram",
+            variant: "destructive",
+          });
         }
       } catch (err) {
         console.error('Error initializing Telegram auth:', err);
@@ -110,6 +104,7 @@ export const useTelegramAuth = () => {
           email,
           password,
           options: {
+            emailRedirectTo: `${window.location.origin}/`,
             data: {
               telegram_id: telegramUser.id,
               first_name: telegramUser.first_name,
@@ -178,7 +173,6 @@ export const useTelegramAuth = () => {
     try {
       await supabase.auth.signOut();
       setUser(null);
-      localStorage.removeItem('telegram_user');
       if (window.Telegram?.WebApp) {
         window.Telegram.WebApp.close();
       }
