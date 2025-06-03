@@ -92,7 +92,7 @@ export const useTelegramAuth = () => {
       console.log('Starting Supabase authentication for user:', telegramUser.id);
       
       // Generate a unique email and password based on Telegram ID
-      const email = `tg_${telegramUser.id}@telegram.local`;
+      const email = `tg_${telegramUser.id}@example.com`;
       const password = `tg_${telegramUser.id}_${process.env.NODE_ENV || 'dev'}`;
       
       // First, try to sign in with existing credentials
