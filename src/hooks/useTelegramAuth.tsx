@@ -36,30 +36,132 @@ export const useTelegramAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const detectTelegramEnvironment = () => {
+    console.log('=== TELEGRAM DETECTION DEBUG ===');
+    console.log('User Agent:', navigator.userAgent);
+    console.log('Current URL:', window.location.href);
+    console.log('URL Params:', window.location.search);
+    console.log('Referrer:', document.referrer);
+    console.log('Window.Telegram:', window.Telegram);
+    console.log('Window.Telegram?.WebApp:', window.Telegram?.WebApp);
+
+    // Method 1: Check for Telegram WebApp API
+    if (window.Telegram?.WebApp) {
+      console.log('✓ Telegram WebApp API detected');
+      return true;
+    }
+
+    // Method 2: Check URL parameters (common in Telegram web apps)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasTelegramParams = urlParams.has('tgWebAppData') || 
+                            urlParams.has('tgWebAppVersion') ||
+                            urlParams.has('tgWebAppPlatform') ||
+                            window.location.search.includes('tgWebApp');
+    
+    if (hasTelegramParams) {
+      console.log('✓ Telegram URL parameters detected');
+      return true;
+    }
+
+    // Method 3: Check User Agent for Telegram
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isTelegramUserAgent = userAgent.includes('telegram') || 
+                               userAgent.includes('tdesktop') ||
+                               userAgent.includes('webogram');
+    
+    if (isTelegramUserAgent) {
+      console.log('✓ Telegram User Agent detected');
+      return true;
+    }
+
+    // Method 4: Check referrer
+    const referrer = document.referrer.toLowerCase();
+    const isTelegramReferrer = referrer.includes('telegram') || 
+                              referrer.includes('t.me') ||
+                              referrer.includes('web.telegram');
+    
+    if (isTelegramReferrer) {
+      console.log('✓ Telegram referrer detected');
+      return true;
+    }
+
+    console.log('✗ No Telegram environment detected');
+    return false;
+  };
+
+  const waitForTelegramScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      let attempts = 0;
+      const maxAttempts = 10;
+      const checkInterval = 100;
+
+      const checkTelegram = () => {
+        attempts++;
+        console.log(`Checking for Telegram script... Attempt ${attempts}/${maxAttempts}`);
+        
+        if (window.Telegram?.WebApp) {
+          console.log('✓ Telegram WebApp script loaded successfully');
+          resolve(true);
+          return;
+        }
+
+        if (attempts >= maxAttempts) {
+          console.log('✗ Telegram WebApp script failed to load after maximum attempts');
+          resolve(false);
+          return;
+        }
+
+        setTimeout(checkTelegram, checkInterval);
+      };
+
+      checkTelegram();
+    });
+  };
+
   useEffect(() => {
     const initTelegram = async () => {
       try {
-        // Check if running in Telegram Web App
-        if (window.Telegram?.WebApp) {
+        console.log('Starting Telegram initialization...');
+        
+        // Wait for Telegram script to load
+        const scriptLoaded = await waitForTelegramScript();
+        
+        // Check if we're in a Telegram environment
+        const isTelegramEnv = detectTelegramEnvironment();
+        
+        if (isTelegramEnv && window.Telegram?.WebApp) {
+          console.log('Initializing Telegram WebApp...');
           const tg = window.Telegram.WebApp;
           tg.ready();
           tg.expand();
           
+          console.log('Telegram WebApp data:', {
+            initData: tg.initData,
+            initDataUnsafe: tg.initDataUnsafe
+          });
+          
           const telegramUser = tg.initDataUnsafe.user;
           
           if (telegramUser) {
-            console.log('Telegram user detected:', telegramUser);
+            console.log('✓ Telegram user detected:', telegramUser);
             await authenticateWithSupabase(telegramUser);
           } else {
-            console.log('No Telegram user found in WebApp');
+            console.log('✗ No Telegram user found in WebApp data');
             setError('No se pudo obtener información del usuario de Telegram');
             toast({
-              description: "No se pudo conectar con Telegram",
+              description: "No se pudo obtener datos de usuario desde Telegram",
               variant: "destructive",
             });
           }
+        } else if (isTelegramEnv && !scriptLoaded) {
+          console.log('✗ Telegram environment detected but script not loaded');
+          setError('Error cargando la interfaz de Telegram');
+          toast({
+            description: "Error al cargar la interfaz de Telegram. Intenta recargar la página.",
+            variant: "destructive",
+          });
         } else {
-          console.log('Not running in Telegram WebApp environment');
+          console.log('✗ Not running in Telegram environment');
           setError('Esta aplicación debe ejecutarse dentro de Telegram');
           toast({
             description: "Por favor, abre esta aplicación desde Telegram",
@@ -86,7 +188,6 @@ export const useTelegramAuth = () => {
       console.log('Starting Supabase authentication for user:', telegramUser.id);
       
       // Generate a unique email and password based on Telegram ID
-      // Using a more standard email format that Supabase will accept
       const email = `user${telegramUser.id}@telegram.app`;
       const password = `tg_${telegramUser.id}_${process.env.NODE_ENV || 'dev'}`;
       
