@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from '@/hooks/use-toast';
 import type { TelegramUser } from '@/types/telegram';
 
+// Flag para controlar si ya se mostró el mensaje de bienvenida
+let hasShownWelcomeMessage = false;
+
 export const authenticateWithSupabase = async (telegramUser: TelegramUser): Promise<void> => {
   try {
     console.log('Starting Supabase authentication for user:', telegramUser.id);
@@ -73,10 +76,14 @@ export const authenticateWithSupabase = async (telegramUser: TelegramUser): Prom
 
       console.log('✓ Authentication complete - user set successfully');
       
-      toast({
-        description: `¡Bienvenido ${telegramUser.first_name}!`,
-        variant: "default",
-      });
+      // Solo mostrar el toast de bienvenida una vez por sesión
+      if (!hasShownWelcomeMessage) {
+        toast({
+          description: `¡Bienvenido ${telegramUser.first_name}!`,
+          variant: "default",
+        });
+        hasShownWelcomeMessage = true;
+      }
     }
   } catch (err) {
     console.error('Supabase authentication error:', err);
@@ -87,6 +94,8 @@ export const authenticateWithSupabase = async (telegramUser: TelegramUser): Prom
 
 export const logoutFromSupabase = async (): Promise<void> => {
   try {
+    // Reset welcome message flag on logout
+    hasShownWelcomeMessage = false;
     await supabase.auth.signOut();
     if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.close();
@@ -94,4 +103,9 @@ export const logoutFromSupabase = async (): Promise<void> => {
   } catch (err) {
     console.error('Logout error:', err);
   }
+};
+
+// Reset welcome message flag when app starts
+export const resetWelcomeMessage = () => {
+  hasShownWelcomeMessage = false;
 };

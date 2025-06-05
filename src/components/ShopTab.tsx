@@ -6,6 +6,7 @@ import { ShoppingBag, Coins, Diamond, Zap, Star, Crown, Rocket, Gift, Axe, Flame
 import { toast } from "@/hooks/use-toast";
 import { useTelegramAuth } from '@/hooks/useTelegramAuth';
 import { useUserProgress } from '@/hooks/useUserProgress';
+import { connectTelegramWallet, disconnectTelegramWallet, getTelegramWalletInfo, sendTONPayment, type TelegramWallet } from '@/utils/telegramWalletUtils';
 
 interface GameState {
   coins: number;
@@ -33,9 +34,7 @@ interface ShopItem {
 const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramStars: number }) => {
   const { coins, setCoins, diamonds, setDiamonds, setExperience } = gameState;
   const [activeSection, setActiveSection] = useState<'coins' | 'diamonds' | 'ton' | 'stars'>('coins');
-  const [tonWalletConnected, setTonWalletConnected] = useState(() => {
-    return localStorage.getItem('tonWalletConnected') === 'true';
-  });
+  const [telegramWallet, setTelegramWallet] = useState<TelegramWallet | null>(() => getTelegramWalletInfo());
   
   const { user } = useTelegramAuth();
   const { addDiamonds } = useUserProgress();
@@ -287,7 +286,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
       name: '10 Diamonds',
       description: 'Perfect starter pack for beginners',
       amount: 10,
-      price: 10,
+      price: 0.1,
       icon: Diamond,
       rarity: 'common' as const
     },
@@ -296,7 +295,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
       name: '50 Diamonds',
       description: 'Popular choice for active players',
       amount: 50,
-      price: 50,
+      price: 0.5,
       icon: Diamond,
       rarity: 'rare' as const
     },
@@ -305,7 +304,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
       name: '100 Diamonds',
       description: 'Great value for serious gamers',
       amount: 100,
-      price: 100,
+      price: 1.0,
       icon: Diamond,
       rarity: 'epic' as const
     },
@@ -314,75 +313,78 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
       name: '500 Diamonds',
       description: 'Ultimate diamond package for champions',
       amount: 500,
-      price: 500,
+      price: 5.0,
       icon: Diamond,
       rarity: 'legendary' as const
     }
   ];
 
-  const connectTonWallet = async () => {
+  const connectWallet = async () => {
     try {
-      if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
-        const webApp = (window as any).Telegram.WebApp;
-        
-        setTonWalletConnected(true);
-        localStorage.setItem('tonWalletConnected', 'true');
-        
-        toast({
-          description: "TON Wallet connected successfully!",
-          variant: "default",
-        });
-        
-        localStorage.setItem('tonWalletAddress', 'UQAbc123...def456');
-        
-      } else {
-        setTonWalletConnected(true);
-        localStorage.setItem('tonWalletConnected', 'true');
-        toast({
-          description: "Simulated TON Wallet connected (development mode)",
-          variant: "default",
-        });
-      }
+      const wallet = await connectTelegramWallet();
+      setTelegramWallet(wallet);
+      
+      toast({
+        description: "Billetera de Telegram conectada exitosamente!",
+        variant: "default",
+      });
     } catch (error) {
       toast({
-        description: "Error connecting TON Wallet",
+        description: "Error al conectar la billetera de Telegram",
         variant: "destructive",
       });
     }
   };
 
-  const disconnectTonWallet = () => {
-    setTonWalletConnected(false);
-    localStorage.removeItem('tonWalletConnected');
-    localStorage.removeItem('tonWalletAddress');
+  const disconnectWallet = () => {
+    disconnectTelegramWallet();
+    setTelegramWallet(null);
     toast({
-      description: "TON Wallet disconnected",
+      description: "Billetera de Telegram desconectada",
       variant: "default",
     });
   };
 
   const buyDiamonds = async (packageItem: typeof diamondPackages[0]) => {
-    if (!tonWalletConnected) {
+    if (!telegramWallet?.isConnected) {
       toast({
-        description: "You need to connect your TON Wallet first",
+        description: "Necesitas conectar tu billetera de Telegram primero",
         variant: "destructive",
       });
       return;
     }
 
-    // In real implementation, this would process the TON payment
-    await addDiamonds(packageItem.amount);
-    
-    toast({
-      description: `Successfully purchased ${packageItem.amount} diamonds for ${packageItem.price} TON!`,
-      variant: "default",
-    });
+    try {
+      const success = await sendTONPayment(
+        packageItem.price, 
+        `Compra de ${packageItem.amount} diamantes`
+      );
+      
+      if (success) {
+        await addDiamonds(packageItem.amount);
+        
+        toast({
+          description: `¡Compra exitosa! Recibiste ${packageItem.amount} diamantes por ${packageItem.price} TON`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          description: "Error en el pago. Intenta nuevamente.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        description: "Error al procesar el pago",
+        variant: "destructive",
+      });
+    }
   };
 
-  const buyItem = (item: ShopItem) => {
-    if (item.currency === 'ton' && !tonWalletConnected) {
+  const buyItem = async (item: ShopItem) => {
+    if (item.currency === 'ton' && !telegramWallet?.isConnected) {
       toast({
-        description: "You need to connect your TON Wallet first",
+        description: "Necesitas conectar tu billetera de Telegram primero",
         variant: "destructive",
       });
       return;
@@ -390,7 +392,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
 
     if (item.currency === 'stars' && !user) {
       toast({
-        description: "You need to be connected with Telegram to use stars",
+        description: "Necesitas estar conectado con Telegram para usar estrellas",
         variant: "destructive",
       });
       return;
@@ -399,23 +401,44 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
     const canAfford = item.currency === 'coins' ? coins >= item.price : 
                      item.currency === 'diamonds' ? diamonds >= item.price :
                      item.currency === 'stars' ? telegramStars >= item.price :
-                     tonWalletConnected;
+                     telegramWallet?.isConnected;
 
     if (!canAfford) {
-      const currencyName = item.currency === 'coins' ? 'coins' : 
-                          item.currency === 'diamonds' ? 'diamonds' :
-                          item.currency === 'stars' ? 'stars' : 'TON';
+      const currencyName = item.currency === 'coins' ? 'monedas' : 
+                          item.currency === 'diamonds' ? 'diamantes' :
+                          item.currency === 'stars' ? 'estrellas' : 'TON';
       toast({
-        description: `You don't have enough ${currencyName} to buy this item.`,
+        description: `No tienes suficientes ${currencyName} para comprar este artículo.`,
         variant: "destructive",
       });
       return;
     }
 
-    if (item.currency === 'coins') {
-      setCoins(prev => prev - item.price);
-    } else if (item.currency === 'diamonds') {
-      setDiamonds(prev => prev - item.price);
+    // Handle TON payments
+    if (item.currency === 'ton') {
+      try {
+        const success = await sendTONPayment(item.price, `Compra: ${item.name}`);
+        if (!success) {
+          toast({
+            description: "Error en el pago. Intenta nuevamente.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (error) {
+        toast({
+          description: "Error al procesar el pago",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else {
+      // Handle regular currency deductions
+      if (item.currency === 'coins') {
+        setCoins(prev => prev - item.price);
+      } else if (item.currency === 'diamonds') {
+        setDiamonds(prev => prev - item.price);
+      }
     }
 
     // Apply specific effects based on item
@@ -423,7 +446,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
       case 'galactic_outpost':
         setCoins(prev => prev + 2000000);
         toast({
-          description: "Galactic Mining Outpost established! +2M Coins, +1000% Mining Efficiency",
+          description: "¡Puesto Galáctico establecido! +2M Monedas, +1000% Eficiencia de Minería",
           variant: "default",
         });
         break;
@@ -431,7 +454,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
         setCoins(prev => prev + 5000000);
         setExperience(prev => prev + 2000000);
         toast({
-          description: "Stellar Command Center activated! +5M Coins, +2M EXP, Fleet Control Online",
+          description: "¡Centro de Comando Estelar activado! +5M Monedas, +2M EXP, Control de Flota Online",
           variant: "default",
         });
         break;
@@ -439,7 +462,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
         setExperience(prev => prev + 10000000);
         setCoins(prev => prev + 3000000);
         toast({
-          description: "Alien Technology Core integrated! +10M EXP, +3M Coins, Ancient Power Unlocked",
+          description: "¡Núcleo de Tecnología Alienígena integrado! +10M EXP, +3M Monedas, Poder Ancestral Desbloqueado",
           variant: "default",
         });
         break;
@@ -448,7 +471,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
         setDiamonds(prev => prev + 5000);
         setExperience(prev => prev + 15000000);
         toast({
-          description: "COSMIC EMPIRE CROWN CLAIMED! +20M Coins, +5K Diamonds, +15M EXP, Galactic Ruler!",
+          description: "¡CORONA DEL IMPERIO CÓSMICO RECLAMADA! +20M Monedas, +5K Diamantes, +15M EXP, ¡Gobernante Galáctico!",
           variant: "default",
         });
         break;
@@ -457,14 +480,14 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
         setDiamonds(prev => prev + 25000);
         setExperience(prev => prev + 50000000);
         toast({
-          description: "UNIVERSAL DOMINATION ACHIEVED! +100M Coins, +25K Diamonds, +50M EXP, UNIVERSE CONQUERED!",
+          description: "¡DOMINACIÓN UNIVERSAL LOGRADA! +100M Monedas, +25K Diamantes, +50M EXP, ¡UNIVERSO CONQUISTADO!",
           variant: "default",
         });
         break;
       default:
         setCoins(prev => prev + 20000);
         toast({
-          description: `${item.name} acquired! +20,000 Coins bonus`,
+          description: `${item.name} adquirido! +20,000 Monedas de bonificación`,
           variant: "default",
         });
     }
@@ -516,7 +539,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
         const canAfford = item.currency === 'coins' ? coins >= item.price : 
                          item.currency === 'diamonds' ? diamonds >= item.price :
                          item.currency === 'stars' ? telegramStars >= item.price :
-                         tonWalletConnected;
+                         telegramWallet?.isConnected;
         
         return (
           <Card key={item.id} className={`bg-gradient-to-r ${getRarityColor(item.rarity)} p-4 border-2 backdrop-blur-sm`}>
@@ -570,7 +593,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
                   } font-bold px-4 py-2`}
                 >
                   <ShoppingBag className="w-4 h-4 mr-2" />
-                  BUY
+                  COMPRAR
                 </Button>
               </div>
             </div>
@@ -583,8 +606,8 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
   const renderDiamondPackages = () => (
     <div className="space-y-4">
       <div className="text-center mb-6">
-        <h3 className="text-2xl font-bold text-cyan-300 mb-2">💎 Diamond Packages</h3>
-        <p className="text-white">Buy diamonds with TON - 1 Diamond = 1 TON</p>
+        <h3 className="text-2xl font-bold text-cyan-300 mb-2">💎 Paquetes de Diamantes</h3>
+        <p className="text-white">Compra diamantes con TON - Precios reales de Telegram</p>
       </div>
       
       {diamondPackages.map((pkg) => {
@@ -605,7 +628,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
                     </Badge>
                   </div>
                   <p className="text-sm text-white/90 mb-2 drop-shadow-sm">{pkg.description}</p>
-                  <p className="text-lg text-blue-300 font-bold drop-shadow-sm">+{pkg.amount} Diamonds</p>
+                  <p className="text-lg text-blue-300 font-bold drop-shadow-sm">+{pkg.amount} Diamantes</p>
                 </div>
               </div>
               
@@ -617,16 +640,16 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
                 
                 <Button
                   onClick={() => buyDiamonds(pkg)}
-                  disabled={!tonWalletConnected}
+                  disabled={!telegramWallet?.isConnected}
                   size="sm"
                   className={`${
-                    tonWalletConnected
+                    telegramWallet?.isConnected
                       ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 border-0 text-white' 
                       : 'bg-gray-700 cursor-not-allowed border-0 text-gray-400'
                   } font-bold px-6 py-2`}
                 >
                   <ShoppingBag className="w-4 h-4 mr-2" />
-                  BUY NOW
+                  COMPRAR
                 </Button>
               </div>
             </div>
@@ -640,39 +663,41 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
     <div className="space-y-6 max-w-4xl mx-auto pb-20">
       <div className="text-center">
         <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent drop-shadow-lg">
-          Cosmic Shop
+          Tienda Cósmica
         </h2>
-        <p className="text-white text-base mt-2 font-semibold drop-shadow-md">Enhance your galactic empire</p>
+        <p className="text-white text-base mt-2 font-semibold drop-shadow-md">Mejora tu imperio galáctico</p>
       </div>
 
-      {/* Enhanced TON Wallet Connection */}
-      <Card className={`${tonWalletConnected ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30' : 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30'} p-4 backdrop-blur-sm`}>
+      {/* Enhanced Telegram Wallet Connection */}
+      <Card className={`${telegramWallet?.isConnected ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30' : 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30'} p-4 backdrop-blur-sm`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Wallet className={`w-8 h-8 ${tonWalletConnected ? 'text-green-400' : 'text-cyan-400'}`} />
+            <Wallet className={`w-8 h-8 ${telegramWallet?.isConnected ? 'text-green-400' : 'text-cyan-400'}`} />
             <div>
               <h3 className="text-lg font-bold text-white">
-                {tonWalletConnected ? 'TON Wallet Connected' : 'Connect your TON Wallet'}
+                {telegramWallet?.isConnected ? 'Billetera de Telegram Conectada' : 'Conecta tu Billetera de Telegram'}
               </h3>
-              <p className={`text-sm ${tonWalletConnected ? 'text-green-300' : 'text-cyan-300'}`}>
-                {tonWalletConnected ? 'Full access to exclusive cosmic items & diamond purchases' : 'Access exclusive items and buy diamonds with TON'}
+              <p className={`text-sm ${telegramWallet?.isConnected ? 'text-green-300' : 'text-cyan-300'}`}>
+                {telegramWallet?.isConnected ? 
+                  `Dirección: ${telegramWallet.address?.slice(0, 8)}...${telegramWallet.address?.slice(-6)} - Acceso completo a artículos cósmicos` : 
+                  'Accede a artículos exclusivos y compra diamantes con TON'}
               </p>
             </div>
           </div>
-          {tonWalletConnected ? (
+          {telegramWallet?.isConnected ? (
             <Button
-              onClick={disconnectTonWallet}
+              onClick={disconnectWallet}
               variant="outline"
               className="border-red-500 text-red-400 hover:bg-red-500/20"
             >
-              Disconnect
+              Desconectar
             </Button>
           ) : (
             <Button
-              onClick={connectTonWallet}
+              onClick={connectWallet}
               className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold"
             >
-              Connect Wallet
+              Conectar Billetera
             </Button>
           )}
         </div>
@@ -690,7 +715,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
           }`}
         >
           <Coins className="w-5 h-5" />
-          <span className="font-bold">COINS</span>
+          <span className="font-bold">MONEDAS</span>
         </Button>
         <Button
           onClick={() => setActiveSection('diamonds')}
@@ -702,7 +727,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
           }`}
         >
           <Diamond className="w-5 h-5" />
-          <span className="font-bold">DIAMONDS</span>
+          <span className="font-bold">DIAMANTES</span>
         </Button>
         <Button
           onClick={() => setActiveSection('stars')}
@@ -714,7 +739,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
           }`}
         >
           <span className="text-lg">⭐</span>
-          <span className="font-bold">STARS</span>
+          <span className="font-bold">ESTRELLAS</span>
         </Button>
         <Button
           onClick={() => setActiveSection('ton')}
@@ -740,8 +765,8 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
             {renderDiamondPackages()}
             <div className="border-t border-gray-600 pt-6">
               <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-purple-300 mb-2">🌌 Cosmic Empire Collection</h3>
-                <p className="text-white">Ultimate cosmic power items for galactic domination</p>
+                <h3 className="text-2xl font-bold text-purple-300 mb-2">🌌 Colección Imperio Cósmico</h3>
+                <p className="text-white">Artículos de poder cósmico supremo para dominación galáctica</p>
               </div>
               {renderShopItems(tonItems)}
             </div>
@@ -751,14 +776,14 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
 
       {/* Current Balance */}
       <Card className="bg-gray-900/80 backdrop-blur-sm border-2 border-gray-600 p-6">
-        <h3 className="text-xl font-bold text-white mb-4 drop-shadow-md">Your Balance</h3>
+        <h3 className="text-xl font-bold text-white mb-4 drop-shadow-md">Tu Balance</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-lg bg-yellow-500/20">
               <Coins className="w-6 h-6 text-yellow-400 drop-shadow-lg" />
             </div>
             <div>
-              <p className="text-sm text-gray-300 font-medium">Coins</p>
+              <p className="text-sm text-gray-300 font-medium">Monedas</p>
               <p className="text-xl font-bold text-yellow-400 drop-shadow-md">{coins.toLocaleString()}</p>
             </div>
           </div>
@@ -767,7 +792,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
               <Diamond className="w-6 h-6 text-blue-400 drop-shadow-lg" />
             </div>
             <div>
-              <p className="text-sm text-gray-300 font-medium">Diamonds</p>
+              <p className="text-sm text-gray-300 font-medium">Diamantes</p>
               <p className="text-xl font-bold text-blue-400 drop-shadow-md">{diamonds.toLocaleString()}</p>
             </div>
           </div>
@@ -777,7 +802,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
                 <span className="text-2xl">⭐</span>
               </div>
               <div>
-                <p className="text-sm text-gray-300 font-medium">Stars</p>
+                <p className="text-sm text-gray-300 font-medium">Estrellas</p>
                 <p className="text-xl font-bold text-yellow-400 drop-shadow-md">{telegramStars}</p>
               </div>
             </div>
@@ -787,9 +812,9 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
               <Wallet className="w-6 h-6 text-cyan-400 drop-shadow-lg" />
             </div>
             <div>
-              <p className="text-sm text-gray-300 font-medium">TON Wallet</p>
+              <p className="text-sm text-gray-300 font-medium">Billetera TON</p>
               <p className="text-sm font-bold text-cyan-400 drop-shadow-md">
-                {tonWalletConnected ? 'Connected ✓' : 'Not connected'}
+                {telegramWallet?.isConnected ? 'Conectada ✓' : 'No conectada'}
               </p>
             </div>
           </div>

@@ -10,7 +10,8 @@ import {
 } from '@/utils/telegramUtils';
 import { 
   authenticateWithSupabase, 
-  logoutFromSupabase 
+  logoutFromSupabase,
+  resetWelcomeMessage
 } from '@/utils/supabaseAuthUtils';
 
 export const useTelegramAuth = () => {
@@ -19,6 +20,9 @@ export const useTelegramAuth = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Reset welcome message when component mounts
+    resetWelcomeMessage();
+    
     const initTelegram = async () => {
       try {
         console.log('Starting Telegram initialization...');
