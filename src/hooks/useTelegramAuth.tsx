@@ -40,13 +40,9 @@ export const useTelegramAuth = () => {
     return window.Telegram?.WebApp !== undefined;
   };
 
-  const isInTelegramBrowser = () => {
-    const userAgent = navigator.userAgent.toLowerCase();
-    return userAgent.includes('telegram') || userAgent.includes('tdesktop');
-  };
-
   const isExternalBrowser = () => {
-    return !isInTelegramWebApp() && !isInTelegramBrowser();
+    const userAgent = navigator.userAgent.toLowerCase();
+    return !userAgent.includes('telegram') && !userAgent.includes('tdesktop');
   };
 
   const waitForTelegramScript = (): Promise<boolean> => {
@@ -130,7 +126,7 @@ export const useTelegramAuth = () => {
               variant: "destructive",
             });
           }
-        } else if (isInTelegramBrowser()) {
+        } else {
           console.log('✗ Running in Telegram browser but not as WebApp');
           setError('Por favor, abre esta aplicación como una WebApp de Telegram');
           toast({
@@ -157,54 +153,52 @@ export const useTelegramAuth = () => {
     try {
       console.log('Starting Supabase authentication for user:', telegramUser.id);
       
-      // Generate a unique email and password based on Telegram ID
-      const email = `user${telegramUser.id}@telegram.app`;
-      const password = `tg_${telegramUser.id}_secure_${Date.now()}`;
-      
-      console.log('Attempting to sign in existing user...');
-      let { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Check if user already exists in profiles table
+      const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('telegram_id', telegramUser.id)
+        .maybeSingle();
 
-      if (signInError && signInError.message.includes('Invalid login credentials')) {
-        console.log('User does not exist, creating new user...');
-        // If user doesn't exist, create a new account
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              telegram_id: telegramUser.id,
-              first_name: telegramUser.first_name,
-              last_name: telegramUser.last_name,
-              username: telegramUser.username,
-              photo_url: telegramUser.photo_url,
-            }
-          }
-        });
-
-        if (signUpError) {
-          console.error('Sign up error:', signUpError);
-          throw signUpError;
-        }
-
-        console.log('User created successfully:', signUpData.user?.id);
-        signInData = signUpData;
-      } else if (signInError) {
-        console.error('Sign in error:', signInError);
-        throw signInError;
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Profile lookup error:', profileError);
+        throw profileError;
       }
 
-      if (signInData.user) {
-        console.log('Successfully authenticated with Supabase:', signInData.user.id);
+      let authUser;
+
+      if (existingProfile) {
+        console.log('Existing user found, signing in anonymously and linking profile...');
+        // Sign in anonymously
+        const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
         
-        // Update or create profile with Telegram data
-        const { error: profileError } = await supabase
+        if (authError) {
+          console.error('Anonymous sign in error:', authError);
+          throw authError;
+        }
+        
+        authUser = authData.user;
+      } else {
+        console.log('New user, creating anonymous session...');
+        // Create new anonymous user
+        const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
+        
+        if (authError) {
+          console.error('Anonymous sign in error:', authError);
+          throw authError;
+        }
+        
+        authUser = authData.user;
+      }
+
+      if (authUser) {
+        console.log('Successfully authenticated with Supabase:', authUser.id);
+        
+        // Create or update profile with Telegram data
+        const { error: upsertError } = await supabase
           .from('profiles')
           .upsert({
-            id: signInData.user.id,
+            id: authUser.id,
             telegram_id: telegramUser.id,
             username: telegramUser.username,
             first_name: telegramUser.first_name,
@@ -212,14 +206,14 @@ export const useTelegramAuth = () => {
             photo_url: telegramUser.photo_url,
             updated_at: new Date().toISOString()
           }, {
-            onConflict: 'id'
+            onConflict: 'telegram_id'
           });
 
-        if (profileError) {
-          console.error('Profile update error:', profileError);
+        if (upsertError) {
+          console.error('Profile upsert error:', upsertError);
           // Don't throw here as auth is successful, just log the error
         } else {
-          console.log('Profile updated successfully');
+          console.log('Profile created/updated successfully');
         }
 
         setUser(telegramUser);
