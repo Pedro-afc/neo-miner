@@ -5,7 +5,8 @@ import type { TelegramUser } from '@/types/telegram';
 import { 
   isInTelegramWebApp, 
   isExternalBrowser, 
-  initializeTelegramWebApp 
+  initializeTelegramWebApp,
+  createMockTelegramUser
 } from '@/utils/telegramUtils';
 import { 
   authenticateWithSupabase, 
@@ -24,7 +25,19 @@ export const useTelegramAuth = () => {
         
         // Check if running in external browser first
         if (isExternalBrowser()) {
-          console.log('✗ Running in external browser - showing Telegram message');
+          console.log('✗ Running in external browser');
+          
+          // For development, allow using mock user
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('telegram') === 'true') {
+            console.log('✓ Development mode - using mock Telegram user');
+            const mockUser = createMockTelegramUser();
+            await authenticateWithSupabase(mockUser);
+            setUser(mockUser);
+            setIsLoading(false);
+            return;
+          }
+          
           setError('Esta aplicación debe ejecutarse dentro de Telegram');
           setIsLoading(false);
           return;

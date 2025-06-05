@@ -21,10 +21,26 @@ export const authenticateWithSupabase = async (telegramUser: TelegramUser): Prom
 
     console.log('Creating anonymous session...');
     // Create new anonymous user
-    const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
+    const { data: authData, error: authError } = await supabase.auth.signInAnonymously({
+      options: {
+        data: {
+          telegram_id: telegramUser.id,
+          telegram_username: telegramUser.username,
+          telegram_first_name: telegramUser.first_name,
+          telegram_last_name: telegramUser.last_name,
+          telegram_photo_url: telegramUser.photo_url
+        }
+      }
+    });
     
     if (authError) {
       console.error('Anonymous sign in error:', authError);
+      
+      // Handle specific error for disabled anonymous sign-ins
+      if (authError.message?.includes('Anonymous sign-ins are disabled')) {
+        throw new Error('La autenticación anónima está deshabilitada. Por favor, contacta al administrador.');
+      }
+      
       throw authError;
     }
     
@@ -64,7 +80,8 @@ export const authenticateWithSupabase = async (telegramUser: TelegramUser): Prom
     }
   } catch (err) {
     console.error('Supabase authentication error:', err);
-    throw new Error('Error al conectar con el servidor de juego');
+    const errorMessage = err instanceof Error ? err.message : 'Error al conectar con el servidor de juego';
+    throw new Error(errorMessage);
   }
 };
 

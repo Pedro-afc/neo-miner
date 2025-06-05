@@ -4,8 +4,19 @@ export const isInTelegramWebApp = (): boolean => {
 };
 
 export const isExternalBrowser = (): boolean => {
+  // For development/testing purposes, allow bypassing Telegram check
+  const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  if (isDevelopment) {
+    // Check if we have a development override
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('telegram') === 'true') {
+      return false; // Simulate being in Telegram
+    }
+  }
+
   const userAgent = navigator.userAgent.toLowerCase();
-  return !userAgent.includes('telegram') && !userAgent.includes('tdesktop');
+  return !userAgent.includes('telegram') && !userAgent.includes('tdesktop') && !isInTelegramWebApp();
 };
 
 export const waitForTelegramScript = (): Promise<boolean> => {
@@ -55,4 +66,15 @@ export const initializeTelegramWebApp = async (): Promise<boolean> => {
   }
   
   return false;
+};
+
+// Helper function to create mock Telegram user for development
+export const createMockTelegramUser = () => {
+  return {
+    id: 123456789,
+    first_name: "Test",
+    last_name: "User",
+    username: "testuser",
+    photo_url: undefined
+  };
 };
