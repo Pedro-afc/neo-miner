@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTelegramAuth } from './useTelegramAuth';
 import { toast } from '@/hooks/use-toast';
 
-interface UserProgress {
+export interface UserProgress {
   id: string;
   coins: number;
   diamonds: number;
