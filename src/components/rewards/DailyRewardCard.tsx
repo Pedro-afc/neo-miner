@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Gift, Calendar, CheckCircle } from 'lucide-react';
+import { Gift, Calendar, CheckCircle, Lock } from 'lucide-react';
 import { UserProgress } from '@/hooks/useUserProgress';
 
 interface DailyRewardCardProps {
@@ -15,6 +15,26 @@ const DailyRewardCard = ({ progress, onClaimDailyReward }: DailyRewardCardProps)
     const today = new Date().toISOString().split('T')[0];
     return progress.last_daily_reward !== today;
   };
+
+  const hasUpgraded = () => {
+    const currentUpgrades = parseInt(localStorage.getItem('cardUpgrades') || '0');
+    return currentUpgrades > 0;
+  };
+
+  const calculateRewards = () => {
+    if (!progress) return { coins: 1000, diamonds: 1 };
+    
+    const baseCoins = 1000;
+    const baseDiamonds = 1;
+    const randomBonus = 0.1 + Math.random() * 0.4; // 10% to 50% bonus
+    
+    return {
+      coins: Math.floor(baseCoins * progress.level * (1 + randomBonus)),
+      diamonds: Math.floor((baseDiamonds + Math.floor(progress.level / 5)) * (1 + randomBonus))
+    };
+  };
+
+  const rewards = calculateRewards();
 
   return (
     <div className="space-y-3 md:space-y-4">
@@ -36,14 +56,23 @@ const DailyRewardCard = ({ progress, onClaimDailyReward }: DailyRewardCardProps)
               Daily Bonus
             </h4>
             <p className="text-sm md:text-base text-gray-200 font-semibold drop-shadow-sm mb-1">
-              {progress ? `${(1000 * progress.level).toLocaleString()} coins` : '1,000 coins'}
+              {rewards.coins.toLocaleString()} coins
             </p>
             <p className="text-sm md:text-base text-gray-200 font-semibold drop-shadow-sm">
-              {progress ? `${Math.floor(progress.level / 5) + 1} diamonds` : '1 diamond'}
+              {rewards.diamonds} diamonds
+            </p>
+            <p className="text-xs text-gray-400 mt-2">
+              Rewards include random bonus (10-50%)
             </p>
           </div>
           
-          {canClaimDaily() ? (
+          {!hasUpgraded() ? (
+            <div className="text-center">
+              <Lock className="w-6 h-6 md:w-8 md:h-8 mx-auto text-gray-400 mb-2" />
+              <p className="text-sm md:text-base text-gray-400 font-bold">LOCKED</p>
+              <p className="text-xs md:text-sm text-gray-500 mt-1">Upgrade your first card to unlock daily rewards!</p>
+            </div>
+          ) : canClaimDaily() ? (
             <Button
               onClick={onClaimDailyReward}
               size="lg"

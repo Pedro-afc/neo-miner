@@ -146,7 +146,7 @@ export const useUserProgress = () => {
     await updateProgress({ auto_click_power: power });
   };
 
-  // Enhanced daily reward claim function that uses database
+  // Fixed daily reward claim function
   const claimDailyReward = async (): Promise<{ success: boolean; coins?: number; diamonds?: number; alreadyClaimed?: boolean }> => {
     if (!progress) return { success: false };
 
@@ -161,32 +161,52 @@ export const useUserProgress = () => {
         return { success: false, alreadyClaimed: true };
       }
 
-      // Calculate rewards based on level
-      const coinsReward = 1000 * progress.level;
-      const diamondsReward = Math.floor(progress.level / 5) + 1;
+      // Get current upgrade count from localStorage to determine if user can claim
+      const currentUpgrades = parseInt(localStorage.getItem('cardUpgrades') || '0');
+      
+      // User must have at least 1 upgrade to claim daily rewards
+      if (currentUpgrades === 0) {
+        toast({
+          description: "You need to upgrade at least one card before claiming daily rewards",
+          variant: "destructive",
+        });
+        return { success: false };
+      }
+
+      // Calculate rewards based on level (base rewards)
+      const baseCoins = 1000;
+      const baseDiamonds = 1;
+      
+      // Add some randomness to rewards (10-50% bonus)
+      const randomBonus = 0.1 + Math.random() * 0.4; // 10% to 50% bonus
+      const coinsReward = Math.floor(baseCoins * progress.level * (1 + randomBonus));
+      const diamondsReward = Math.floor((baseDiamonds + Math.floor(progress.level / 5)) * (1 + randomBonus));
 
       // Update database with rewards and last claim date
+      const newCoins = progress.coins + coinsReward;
+      const newDiamonds = progress.diamonds + diamondsReward;
+      
       const { error } = await supabase
         .from('user_progress')
         .update({
-          coins: progress.coins + coinsReward,
-          diamonds: progress.diamonds + diamondsReward,
+          coins: newCoins,
+          diamonds: newDiamonds,
           last_daily_reward: today
         })
         .eq('user_id', authUser.id);
 
       if (error) throw error;
 
-      // Update local state
+      // Update local state immediately
       setProgress(prev => prev ? {
         ...prev,
-        coins: prev.coins + coinsReward,
-        diamonds: prev.diamonds + diamondsReward,
+        coins: newCoins,
+        diamonds: newDiamonds,
         last_daily_reward: today
       } : null);
 
       toast({
-        description: `Daily reward claimed! +${coinsReward} coins, +${diamondsReward} diamonds`,
+        description: `Daily reward claimed! +${coinsReward.toLocaleString()} coins, +${diamondsReward} diamonds`,
         variant: "default",
       });
 
