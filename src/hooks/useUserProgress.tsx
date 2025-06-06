@@ -146,6 +146,61 @@ export const useUserProgress = () => {
     await updateProgress({ auto_click_power: power });
   };
 
+  // Enhanced daily reward claim function that uses database
+  const claimDailyReward = async (): Promise<{ success: boolean; coins?: number; diamonds?: number; alreadyClaimed?: boolean }> => {
+    if (!progress) return { success: false };
+
+    try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) return { success: false };
+
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      
+      // Check if user already claimed today
+      if (progress.last_daily_reward === today) {
+        return { success: false, alreadyClaimed: true };
+      }
+
+      // Calculate rewards based on level
+      const coinsReward = 1000 * progress.level;
+      const diamondsReward = Math.floor(progress.level / 5) + 1;
+
+      // Update database with rewards and last claim date
+      const { error } = await supabase
+        .from('user_progress')
+        .update({
+          coins: progress.coins + coinsReward,
+          diamonds: progress.diamonds + diamondsReward,
+          last_daily_reward: today
+        })
+        .eq('user_id', authUser.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setProgress(prev => prev ? {
+        ...prev,
+        coins: prev.coins + coinsReward,
+        diamonds: prev.diamonds + diamondsReward,
+        last_daily_reward: today
+      } : null);
+
+      toast({
+        description: `Daily reward claimed! +${coinsReward} coins, +${diamondsReward} diamonds`,
+        variant: "default",
+      });
+
+      return { success: true, coins: coinsReward, diamonds: diamondsReward };
+    } catch (error) {
+      console.error('Error claiming daily reward:', error);
+      toast({
+        description: "Error claiming daily reward",
+        variant: "destructive",
+      });
+      return { success: false };
+    }
+  };
+
   return {
     progress,
     loading,
@@ -154,6 +209,7 @@ export const useUserProgress = () => {
     addDiamonds,
     addExperience,
     updateAutoClickPower,
+    claimDailyReward,
     refreshProgress: loadUserProgress
   };
 };

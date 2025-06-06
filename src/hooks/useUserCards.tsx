@@ -44,12 +44,14 @@ export const useUserCards = () => {
 
       setCards(data || []);
       
-      // Calculate total auto-click power
+      // Calculate total auto-click power from all cards
       const totalAutoClick = (data || []).reduce((total, card) => {
         return total + calculateAutoClickIncrement(card.current_price);
       }, 0);
       
+      // Update auto-click power in user progress
       await updateAutoClickPower(totalAutoClick);
+      console.log('Auto-click power updated:', totalAutoClick);
     } catch (error) {
       console.error('Error loading user cards:', error);
     } finally {
@@ -101,7 +103,7 @@ export const useUserCards = () => {
         if (error) throw error;
       }
 
-      // Reload cards and recalculate auto-click power
+      // Reload cards to get updated data and recalculate auto-click power
       await loadUserCards();
       
       toast({

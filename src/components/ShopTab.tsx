@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -226,7 +227,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
       effect: 'Universal Power - Infinite Resources x168h'
     },
 
-    // Stars Items - Exclusive features (prices multiplied by 10)
+    // Stars Items - Exclusive features
     {
       id: 'star_booster',
       name: 'Stellar Booster',
@@ -325,12 +326,12 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
       setTelegramWallet(wallet);
       
       toast({
-        description: "Billetera de Telegram conectada exitosamente!",
+        description: "Telegram wallet connected successfully!",
         variant: "default",
       });
     } catch (error) {
       toast({
-        description: "Error al conectar la billetera de Telegram",
+        description: "Error connecting Telegram wallet",
         variant: "destructive",
       });
     }
@@ -340,7 +341,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
     disconnectTelegramWallet();
     setTelegramWallet(null);
     toast({
-      description: "Billetera de Telegram desconectada",
+      description: "Telegram wallet disconnected",
       variant: "default",
     });
   };
@@ -348,7 +349,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
   const buyDiamonds = async (packageItem: typeof diamondPackages[0]) => {
     if (!telegramWallet?.isConnected) {
       toast({
-        description: "Necesitas conectar tu billetera de Telegram primero",
+        description: "You need to connect your Telegram wallet first",
         variant: "destructive",
       });
       return;
@@ -357,25 +358,25 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
     try {
       const success = await sendTONPayment(
         packageItem.price, 
-        `Compra de ${packageItem.amount} diamantes`
+        `Purchase of ${packageItem.amount} diamonds`
       );
       
       if (success) {
         await addDiamonds(packageItem.amount);
         
         toast({
-          description: `¡Compra exitosa! Recibiste ${packageItem.amount} diamantes por ${packageItem.price} TON`,
+          description: `Purchase successful! You received ${packageItem.amount} diamonds for ${packageItem.price} TON`,
           variant: "default",
         });
       } else {
         toast({
-          description: "Error en el pago. Intenta nuevamente.",
+          description: "Payment error. Please try again.",
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        description: "Error al procesar el pago",
+        description: "Error processing payment",
         variant: "destructive",
       });
     }
@@ -384,7 +385,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
   const buyItem = async (item: ShopItem) => {
     if (item.currency === 'ton' && !telegramWallet?.isConnected) {
       toast({
-        description: "Necesitas conectar tu billetera de Telegram primero",
+        description: "You need to connect your Telegram wallet first",
         variant: "destructive",
       });
       return;
@@ -392,7 +393,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
 
     if (item.currency === 'stars' && !user) {
       toast({
-        description: "Necesitas estar conectado con Telegram para usar estrellas",
+        description: "You need to be connected with Telegram to use stars",
         variant: "destructive",
       });
       return;
@@ -404,11 +405,11 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
                      telegramWallet?.isConnected;
 
     if (!canAfford) {
-      const currencyName = item.currency === 'coins' ? 'monedas' : 
-                          item.currency === 'diamonds' ? 'diamantes' :
-                          item.currency === 'stars' ? 'estrellas' : 'TON';
+      const currencyName = item.currency === 'coins' ? 'coins' : 
+                          item.currency === 'diamonds' ? 'diamonds' :
+                          item.currency === 'stars' ? 'stars' : 'TON';
       toast({
-        description: `No tienes suficientes ${currencyName} para comprar este artículo.`,
+        description: `You don't have enough ${currencyName} to buy this item.`,
         variant: "destructive",
       });
       return;
@@ -417,17 +418,17 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
     // Handle TON payments
     if (item.currency === 'ton') {
       try {
-        const success = await sendTONPayment(item.price, `Compra: ${item.name}`);
+        const success = await sendTONPayment(item.price, `Purchase: ${item.name}`);
         if (!success) {
           toast({
-            description: "Error en el pago. Intenta nuevamente.",
+            description: "Payment error. Please try again.",
             variant: "destructive",
           });
           return;
         }
       } catch (error) {
         toast({
-          description: "Error al procesar el pago",
+          description: "Error processing payment",
           variant: "destructive",
         });
         return;
@@ -446,7 +447,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
       case 'galactic_outpost':
         setCoins(prev => prev + 2000000);
         toast({
-          description: "¡Puesto Galáctico establecido! +2M Monedas, +1000% Eficiencia de Minería",
+          description: "Galactic Outpost established! +2M Coins, +1000% Mining Efficiency",
           variant: "default",
         });
         break;
@@ -454,7 +455,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
         setCoins(prev => prev + 5000000);
         setExperience(prev => prev + 2000000);
         toast({
-          description: "¡Centro de Comando Estelar activado! +5M Monedas, +2M EXP, Control de Flota Online",
+          description: "Stellar Command Center activated! +5M Coins, +2M EXP, Fleet Control Online",
           variant: "default",
         });
         break;
@@ -462,7 +463,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
         setExperience(prev => prev + 10000000);
         setCoins(prev => prev + 3000000);
         toast({
-          description: "¡Núcleo de Tecnología Alienígena integrado! +10M EXP, +3M Monedas, Poder Ancestral Desbloqueado",
+          description: "Alien Technology Core integrated! +10M EXP, +3M Coins, Ancient Power Unlocked",
           variant: "default",
         });
         break;
@@ -471,7 +472,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
         setDiamonds(prev => prev + 5000);
         setExperience(prev => prev + 15000000);
         toast({
-          description: "¡CORONA DEL IMPERIO CÓSMICO RECLAMADA! +20M Monedas, +5K Diamantes, +15M EXP, ¡Gobernante Galáctico!",
+          description: "COSMIC EMPIRE CROWN CLAIMED! +20M Coins, +5K Diamonds, +15M EXP, Galactic Ruler!",
           variant: "default",
         });
         break;
@@ -480,14 +481,14 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
         setDiamonds(prev => prev + 25000);
         setExperience(prev => prev + 50000000);
         toast({
-          description: "¡DOMINACIÓN UNIVERSAL LOGRADA! +100M Monedas, +25K Diamantes, +50M EXP, ¡UNIVERSO CONQUISTADO!",
+          description: "UNIVERSAL DOMINATION ACHIEVED! +100M Coins, +25K Diamonds, +50M EXP, UNIVERSE CONQUERED!",
           variant: "default",
         });
         break;
       default:
         setCoins(prev => prev + 20000);
         toast({
-          description: `${item.name} adquirido! +20,000 Monedas de bonificación`,
+          description: `${item.name} acquired! +20,000 Coins bonus`,
           variant: "default",
         });
     }
@@ -533,7 +534,7 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
   const starsItems = shopItems.filter(item => item.currency === 'stars');
 
   const renderShopItems = (items: ShopItem[]) => (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {items.map((item) => {
         const Icon = item.icon;
         const canAfford = item.currency === 'coins' ? coins >= item.price : 
@@ -542,40 +543,40 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
                          telegramWallet?.isConnected;
         
         return (
-          <Card key={item.id} className={`bg-gradient-to-r ${getRarityColor(item.rarity)} p-4 border-2 backdrop-blur-sm`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-white/20 backdrop-blur-sm">
-                  <Icon className="w-6 h-6 text-white drop-shadow-lg" />
+          <Card key={item.id} className={`bg-gradient-to-r ${getRarityColor(item.rarity)} p-3 md:p-4 border-2 backdrop-blur-sm`}>
+            <div className="flex items-center justify-between gap-3 md:gap-4">
+              <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                <div className="p-2 md:p-3 rounded-lg bg-white/20 backdrop-blur-sm flex-shrink-0">
+                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-white drop-shadow-lg" />
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-bold text-white text-lg drop-shadow-md">{item.name}</h3>
-                    <Badge className={getRarityBadgeColor(item.rarity)}>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2 flex-wrap">
+                    <h3 className="font-bold text-white text-sm md:text-base lg:text-lg drop-shadow-md">{item.name}</h3>
+                    <Badge className={`${getRarityBadgeColor(item.rarity)} text-xs`}>
                       {item.rarity.toUpperCase()}
                     </Badge>
                   </div>
-                  <p className="text-sm text-white/90 mb-2 drop-shadow-sm">{item.description}</p>
-                  <p className="text-sm text-green-300 font-bold drop-shadow-sm">{item.effect}</p>
+                  <p className="text-xs md:text-sm text-white/90 mb-1 md:mb-2 drop-shadow-sm line-clamp-2">{item.description}</p>
+                  <p className="text-xs md:text-sm text-green-300 font-bold drop-shadow-sm">{item.effect}</p>
                 </div>
               </div>
               
-              <div className="text-right flex flex-col items-end gap-3">
-                <div className={`flex items-center gap-2 ${
+              <div className="text-right flex flex-col items-end gap-2 md:gap-3 flex-shrink-0">
+                <div className={`flex items-center gap-1 md:gap-2 ${
                   item.currency === 'coins' ? 'text-yellow-300' : 
                   item.currency === 'diamonds' ? 'text-blue-300' :
                   item.currency === 'stars' ? 'text-yellow-300' :
                   'text-cyan-300'
                 }`}>
                   {item.currency === 'coins' ? 
-                    <Coins className="w-5 h-5 drop-shadow-lg" /> : 
+                    <Coins className="w-4 h-4 md:w-5 md:h-5 drop-shadow-lg" /> : 
                     item.currency === 'diamonds' ?
-                    <Diamond className="w-5 h-5 drop-shadow-lg" /> :
+                    <Diamond className="w-4 h-4 md:w-5 md:h-5 drop-shadow-lg" /> :
                     item.currency === 'stars' ?
-                    <span className="text-lg">⭐</span> :
-                    <Wallet className="w-5 h-5 drop-shadow-lg" />
+                    <span className="text-base md:text-lg">⭐</span> :
+                    <Wallet className="w-4 h-4 md:w-5 md:h-5 drop-shadow-lg" />
                   }
-                  <span className="font-bold text-lg drop-shadow-md">
+                  <span className="font-bold text-sm md:text-base lg:text-lg drop-shadow-md">
                     {item.currency === 'ton' ? `${item.price} TON` : 
                      item.currency === 'stars' ? `${item.price}` :
                      item.price.toLocaleString()}
@@ -590,10 +591,10 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
                     canAfford 
                       ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0 text-white' 
                       : 'bg-gray-700 cursor-not-allowed border-0 text-gray-400'
-                  } font-bold px-4 py-2`}
+                  } font-bold px-3 md:px-4 py-1 md:py-2 text-xs md:text-sm`}
                 >
-                  <ShoppingBag className="w-4 h-4 mr-2" />
-                  COMPRAR
+                  <ShoppingBag className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                  BUY
                 </Button>
               </div>
             </div>
@@ -604,38 +605,38 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
   );
 
   const renderDiamondPackages = () => (
-    <div className="space-y-4">
-      <div className="text-center mb-6">
-        <h3 className="text-2xl font-bold text-cyan-300 mb-2">💎 Paquetes de Diamantes</h3>
-        <p className="text-white">Compra diamantes con TON - Precios reales de Telegram</p>
+    <div className="space-y-3 md:space-y-4">
+      <div className="text-center mb-4 md:mb-6">
+        <h3 className="text-xl md:text-2xl font-bold text-cyan-300 mb-2">💎 Diamond Packages</h3>
+        <p className="text-sm md:text-base text-white">Buy diamonds with TON - Real Telegram prices</p>
       </div>
       
       {diamondPackages.map((pkg) => {
         const Icon = pkg.icon;
         
         return (
-          <Card key={pkg.id} className={`bg-gradient-to-r ${getRarityColor(pkg.rarity)} p-4 border-2 backdrop-blur-sm`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-blue-500/30 backdrop-blur-sm">
-                  <Icon className="w-8 h-8 text-blue-300 drop-shadow-lg" />
+          <Card key={pkg.id} className={`bg-gradient-to-r ${getRarityColor(pkg.rarity)} p-3 md:p-4 border-2 backdrop-blur-sm`}>
+            <div className="flex items-center justify-between gap-3 md:gap-4">
+              <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                <div className="p-2 md:p-3 rounded-lg bg-blue-500/30 backdrop-blur-sm flex-shrink-0">
+                  <Icon className="w-6 h-6 md:w-8 md:h-8 text-blue-300 drop-shadow-lg" />
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-bold text-white text-xl drop-shadow-md">{pkg.name}</h3>
-                    <Badge className={getRarityBadgeColor(pkg.rarity)}>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 md:gap-3 mb-1 md:mb-2 flex-wrap">
+                    <h3 className="font-bold text-white text-base md:text-xl drop-shadow-md">{pkg.name}</h3>
+                    <Badge className={`${getRarityBadgeColor(pkg.rarity)} text-xs`}>
                       {pkg.rarity.toUpperCase()}
                     </Badge>
                   </div>
-                  <p className="text-sm text-white/90 mb-2 drop-shadow-sm">{pkg.description}</p>
-                  <p className="text-lg text-blue-300 font-bold drop-shadow-sm">+{pkg.amount} Diamantes</p>
+                  <p className="text-xs md:text-sm text-white/90 mb-1 md:mb-2 drop-shadow-sm">{pkg.description}</p>
+                  <p className="text-sm md:text-lg text-blue-300 font-bold drop-shadow-sm">+{pkg.amount} Diamonds</p>
                 </div>
               </div>
               
-              <div className="text-right flex flex-col items-end gap-3">
-                <div className="flex items-center gap-2 text-cyan-300">
-                  <Wallet className="w-5 h-5 drop-shadow-lg" />
-                  <span className="font-bold text-xl drop-shadow-md">{pkg.price} TON</span>
+              <div className="text-right flex flex-col items-end gap-2 md:gap-3 flex-shrink-0">
+                <div className="flex items-center gap-1 md:gap-2 text-cyan-300">
+                  <Wallet className="w-4 h-4 md:w-5 md:h-5 drop-shadow-lg" />
+                  <span className="font-bold text-base md:text-xl drop-shadow-md">{pkg.price} TON</span>
                 </div>
                 
                 <Button
@@ -646,10 +647,10 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
                     telegramWallet?.isConnected
                       ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 border-0 text-white' 
                       : 'bg-gray-700 cursor-not-allowed border-0 text-gray-400'
-                  } font-bold px-6 py-2`}
+                  } font-bold px-4 md:px-6 py-1 md:py-2 text-xs md:text-sm`}
                 >
-                  <ShoppingBag className="w-4 h-4 mr-2" />
-                  COMPRAR
+                  <ShoppingBag className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                  BUY
                 </Button>
               </div>
             </div>
@@ -660,27 +661,27 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
   );
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-20">
+    <div className="space-y-4 md:space-y-6 max-w-4xl mx-auto pb-16 md:pb-20 px-3 md:px-4">
       <div className="text-center">
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent drop-shadow-lg">
-          Tienda Cósmica
+        <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent drop-shadow-lg">
+          Cosmic Shop
         </h2>
-        <p className="text-white text-base mt-2 font-semibold drop-shadow-md">Mejora tu imperio galáctico</p>
+        <p className="text-sm md:text-base text-white mt-2 font-semibold drop-shadow-md">Upgrade your galactic empire</p>
       </div>
 
-      {/* Enhanced Telegram Wallet Connection */}
-      <Card className={`${telegramWallet?.isConnected ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30' : 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30'} p-4 backdrop-blur-sm`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Wallet className={`w-8 h-8 ${telegramWallet?.isConnected ? 'text-green-400' : 'text-cyan-400'}`} />
-            <div>
-              <h3 className="text-lg font-bold text-white">
-                {telegramWallet?.isConnected ? 'Billetera de Telegram Conectada' : 'Conecta tu Billetera de Telegram'}
+      {/* Enhanced Telegram Wallet Connection - Responsive */}
+      <Card className={`${telegramWallet?.isConnected ? 'bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-green-500/30' : 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30'} p-3 md:p-4 backdrop-blur-sm`}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+            <Wallet className={`w-6 h-6 md:w-8 md:h-8 ${telegramWallet?.isConnected ? 'text-green-400' : 'text-cyan-400'} flex-shrink-0`} />
+            <div className="min-w-0 flex-1">
+              <h3 className="text-sm md:text-lg font-bold text-white">
+                {telegramWallet?.isConnected ? 'Telegram Wallet Connected' : 'Connect your Telegram Wallet'}
               </h3>
-              <p className={`text-sm ${telegramWallet?.isConnected ? 'text-green-300' : 'text-cyan-300'}`}>
+              <p className={`text-xs md:text-sm ${telegramWallet?.isConnected ? 'text-green-300' : 'text-cyan-300'}`}>
                 {telegramWallet?.isConnected ? 
-                  `Dirección: ${telegramWallet.address?.slice(0, 8)}...${telegramWallet.address?.slice(-6)} - Acceso completo a artículos cósmicos` : 
-                  'Accede a artículos exclusivos y compra diamantes con TON'}
+                  `Address: ${telegramWallet.address?.slice(0, 8)}...${telegramWallet.address?.slice(-6)} - Full access to cosmic items` : 
+                  'Access exclusive items and buy diamonds with TON'}
               </p>
             </div>
           </div>
@@ -688,85 +689,87 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
             <Button
               onClick={disconnectWallet}
               variant="outline"
-              className="border-red-500 text-red-400 hover:bg-red-500/20"
+              size="sm"
+              className="border-red-500 text-red-400 hover:bg-red-500/20 text-xs md:text-sm flex-shrink-0"
             >
-              Desconectar
+              Disconnect
             </Button>
           ) : (
             <Button
               onClick={connectWallet}
-              className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold"
+              size="sm"
+              className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs md:text-sm flex-shrink-0"
             >
-              Conectar Billetera
+              Connect Wallet
             </Button>
           )}
         </div>
       </Card>
 
-      {/* Navigation Tabs */}
-      <div className="flex space-x-1 bg-gray-900/80 p-1 rounded-xl backdrop-blur-sm border border-gray-600">
+      {/* Navigation Tabs - Responsive */}
+      <div className="flex space-x-1 bg-gray-900/80 p-1 rounded-xl backdrop-blur-sm border border-gray-600 overflow-x-auto">
         <Button
           onClick={() => setActiveSection('coins')}
           variant="ghost"
-          className={`flex-1 flex items-center justify-center gap-2 rounded-lg transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center gap-1 md:gap-2 rounded-lg transition-all duration-200 text-xs md:text-sm whitespace-nowrap ${
             activeSection === 'coins' 
               ? 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white shadow-lg' 
               : 'text-gray-300 hover:bg-gray-700 hover:text-white'
           }`}
         >
-          <Coins className="w-5 h-5" />
-          <span className="font-bold">MONEDAS</span>
+          <Coins className="w-4 h-4 md:w-5 md:h-5" />
+          <span className="font-bold">COINS</span>
         </Button>
         <Button
           onClick={() => setActiveSection('diamonds')}
           variant="ghost"
-          className={`flex-1 flex items-center justify-center gap-2 rounded-lg transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center gap-1 md:gap-2 rounded-lg transition-all duration-200 text-xs md:text-sm whitespace-nowrap ${
             activeSection === 'diamonds' 
               ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg' 
               : 'text-gray-300 hover:bg-gray-700 hover:text-white'
           }`}
         >
-          <Diamond className="w-5 h-5" />
-          <span className="font-bold">DIAMANTES</span>
+          <Diamond className="w-4 h-4 md:w-5 md:h-5" />
+          <span className="font-bold">DIAMONDS</span>
         </Button>
         <Button
           onClick={() => setActiveSection('stars')}
           variant="ghost"
-          className={`flex-1 flex items-center justify-center gap-2 rounded-lg transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center gap-1 md:gap-2 rounded-lg transition-all duration-200 text-xs md:text-sm whitespace-nowrap ${
             activeSection === 'stars' 
               ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg' 
               : 'text-gray-300 hover:bg-gray-700 hover:text-white'
           }`}
         >
-          <span className="text-lg">⭐</span>
-          <span className="font-bold">ESTRELLAS</span>
+          <span className="text-base md:text-lg">⭐</span>
+          <span className="font-bold">STARS</span>
         </Button>
         <Button
           onClick={() => setActiveSection('ton')}
           variant="ghost"
-          className={`flex-1 flex items-center justify-center gap-2 rounded-lg transition-all duration-200 ${
+          className={`flex-1 flex items-center justify-center gap-1 md:gap-2 rounded-lg transition-all duration-200 text-xs md:text-sm whitespace-nowrap ${
             activeSection === 'ton' 
               ? 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-lg' 
               : 'text-gray-300 hover:bg-gray-700 hover:text-white'
           }`}
         >
-          <Wallet className="w-5 h-5" />
+          <Wallet className="w-4 h-4 md:w-5 md:h-5" />
           <span className="font-bold">TON</span>
         </Button>
       </div>
 
       {/* Content based on active section */}
-      <div className="mt-6">
+      <div className="mt-4 md:mt-6">
         {activeSection === 'coins' && renderShopItems(coinsItems)}
         {activeSection === 'diamonds' && renderShopItems(diamondsItems)}
         {activeSection === 'stars' && renderShopItems(starsItems)}
         {activeSection === 'ton' && (
-          <div className="space-y-8">
+          <div className="space-y-6 md:space-y-8">
             {renderDiamondPackages()}
-            <div className="border-t border-gray-600 pt-6">
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-purple-300 mb-2">🌌 Colección Imperio Cósmico</h3>
-                <p className="text-white">Artículos de poder cósmico supremo para dominación galáctica</p>
+            <div className="border-t border-gray-600 pt-4 md:pt-6">
+              <div className="text-center mb-4 md:mb-6">
+                <h3 className="text-xl md:text-2xl font-bold text-purple-300 mb-2">🌌 Cosmic Empire Collection</h3>
+                <p className="text-sm md:text-base text-white">Supreme cosmic power items for galactic domination</p>
               </div>
               {renderShopItems(tonItems)}
             </div>
@@ -774,47 +777,47 @@ const ShopTab = ({ gameState, telegramStars }: { gameState: GameState; telegramS
         )}
       </div>
 
-      {/* Current Balance */}
-      <Card className="bg-gray-900/80 backdrop-blur-sm border-2 border-gray-600 p-6">
-        <h3 className="text-xl font-bold text-white mb-4 drop-shadow-md">Tu Balance</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-lg bg-yellow-500/20">
-              <Coins className="w-6 h-6 text-yellow-400 drop-shadow-lg" />
+      {/* Current Balance - Responsive */}
+      <Card className="bg-gray-900/80 backdrop-blur-sm border-2 border-gray-600 p-4 md:p-6">
+        <h3 className="text-lg md:text-xl font-bold text-white mb-3 md:mb-4 drop-shadow-md">Your Balance</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="p-2 md:p-3 rounded-lg bg-yellow-500/20 flex-shrink-0">
+              <Coins className="w-5 h-5 md:w-6 md:h-6 text-yellow-400 drop-shadow-lg" />
             </div>
-            <div>
-              <p className="text-sm text-gray-300 font-medium">Monedas</p>
-              <p className="text-xl font-bold text-yellow-400 drop-shadow-md">{coins.toLocaleString()}</p>
+            <div className="min-w-0">
+              <p className="text-xs md:text-sm text-gray-300 font-medium">Coins</p>
+              <p className="text-sm md:text-xl font-bold text-yellow-400 drop-shadow-md truncate">{coins.toLocaleString()}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-lg bg-blue-500/20">
-              <Diamond className="w-6 h-6 text-blue-400 drop-shadow-lg" />
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="p-2 md:p-3 rounded-lg bg-blue-500/20 flex-shrink-0">
+              <Diamond className="w-5 h-5 md:w-6 md:h-6 text-blue-400 drop-shadow-lg" />
             </div>
-            <div>
-              <p className="text-sm text-gray-300 font-medium">Diamantes</p>
-              <p className="text-xl font-bold text-blue-400 drop-shadow-md">{diamonds.toLocaleString()}</p>
+            <div className="min-w-0">
+              <p className="text-xs md:text-sm text-gray-300 font-medium">Diamonds</p>
+              <p className="text-sm md:text-xl font-bold text-blue-400 drop-shadow-md truncate">{diamonds.toLocaleString()}</p>
             </div>
           </div>
           {user && (
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-yellow-500/20">
-                <span className="text-2xl">⭐</span>
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-2 md:p-3 rounded-lg bg-yellow-500/20 flex-shrink-0">
+                <span className="text-lg md:text-2xl">⭐</span>
               </div>
-              <div>
-                <p className="text-sm text-gray-300 font-medium">Estrellas</p>
-                <p className="text-xl font-bold text-yellow-400 drop-shadow-md">{telegramStars}</p>
+              <div className="min-w-0">
+                <p className="text-xs md:text-sm text-gray-300 font-medium">Stars</p>
+                <p className="text-sm md:text-xl font-bold text-yellow-400 drop-shadow-md truncate">{telegramStars}</p>
               </div>
             </div>
           )}
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-lg bg-cyan-500/20">
-              <Wallet className="w-6 h-6 text-cyan-400 drop-shadow-lg" />
+          <div className="flex items-center gap-2 md:gap-3">
+            <div className="p-2 md:p-3 rounded-lg bg-cyan-500/20 flex-shrink-0">
+              <Wallet className="w-5 h-5 md:w-6 md:h-6 text-cyan-400 drop-shadow-lg" />
             </div>
-            <div>
-              <p className="text-sm text-gray-300 font-medium">Billetera TON</p>
-              <p className="text-sm font-bold text-cyan-400 drop-shadow-md">
-                {telegramWallet?.isConnected ? 'Conectada ✓' : 'No conectada'}
+            <div className="min-w-0">
+              <p className="text-xs md:text-sm text-gray-300 font-medium">TON Wallet</p>
+              <p className="text-xs md:text-sm font-bold text-cyan-400 drop-shadow-md">
+                {telegramWallet?.isConnected ? 'Connected ✓' : 'Not connected'}
               </p>
             </div>
           </div>

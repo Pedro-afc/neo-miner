@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from '@/hooks/use-toast';
 import type { TelegramUser } from '@/types/telegram';
 
-// Flag para controlar si ya se mostró el mensaje de bienvenida
-let hasShownWelcomeMessage = false;
+// Use sessionStorage instead of a global variable to persist across tab changes
+const WELCOME_MESSAGE_KEY = 'telegram_welcome_shown';
 
 export const authenticateWithSupabase = async (telegramUser: TelegramUser): Promise<void> => {
   try {
@@ -41,7 +41,7 @@ export const authenticateWithSupabase = async (telegramUser: TelegramUser): Prom
       
       // Handle specific error for disabled anonymous sign-ins
       if (authError.message?.includes('Anonymous sign-ins are disabled')) {
-        throw new Error('La autenticación anónima está deshabilitada. Por favor, contacta al administrador.');
+        throw new Error('Anonymous authentication is disabled. Please contact the administrator.');
       }
       
       throw authError;
@@ -76,26 +76,28 @@ export const authenticateWithSupabase = async (telegramUser: TelegramUser): Prom
 
       console.log('✓ Authentication complete - user set successfully');
       
-      // Solo mostrar el toast de bienvenida una vez por sesión
-      if (!hasShownWelcomeMessage) {
+      // Check sessionStorage to see if welcome message was already shown
+      const hasShownWelcome = sessionStorage.getItem(WELCOME_MESSAGE_KEY);
+      
+      if (!hasShownWelcome) {
         toast({
-          description: `¡Bienvenido ${telegramUser.first_name}!`,
+          description: `Welcome ${telegramUser.first_name}!`,
           variant: "default",
         });
-        hasShownWelcomeMessage = true;
+        sessionStorage.setItem(WELCOME_MESSAGE_KEY, 'true');
       }
     }
   } catch (err) {
     console.error('Supabase authentication error:', err);
-    const errorMessage = err instanceof Error ? err.message : 'Error al conectar con el servidor de juego';
+    const errorMessage = err instanceof Error ? err.message : 'Error connecting to game server';
     throw new Error(errorMessage);
   }
 };
 
 export const logoutFromSupabase = async (): Promise<void> => {
   try {
-    // Reset welcome message flag on logout
-    hasShownWelcomeMessage = false;
+    // Clear welcome message flag on logout
+    sessionStorage.removeItem(WELCOME_MESSAGE_KEY);
     await supabase.auth.signOut();
     if (window.Telegram?.WebApp) {
       window.Telegram.WebApp.close();
@@ -105,7 +107,8 @@ export const logoutFromSupabase = async (): Promise<void> => {
   }
 };
 
-// Reset welcome message flag when app starts
+// Reset welcome message flag when app starts (for new sessions)
 export const resetWelcomeMessage = () => {
-  hasShownWelcomeMessage = false;
+  // Don't clear sessionStorage here - let it persist across tab changes
+  console.log('Welcome message system initialized');
 };
