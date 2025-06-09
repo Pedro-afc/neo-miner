@@ -59,42 +59,49 @@ const Index = () => {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(120,119,198,0.3),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,119,198,0.3),transparent_50%)]" />
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-h-screen pb-16 md:pb-20">
-        <div className="w-full pt-2 sm:pt-4">
-          <div className="px-3 sm:px-6 max-w-4xl mx-auto">
-            <UserProfile user={user} onLogout={logout} />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-h-screen">
+        <div className="flex flex-col h-screen">
+          {/* Header - Fixed height */}
+          <div className="flex-shrink-0 pt-2 sm:pt-4">
+            <div className="px-3 sm:px-6">
+              <UserProfile user={user} onLogout={logout} />
+            </div>
           </div>
           
-          <TabsContent value="home" className="mt-0 w-full">
-            <GameScreen gameState={gameState} autoClickPower={progress.auto_click_power} />
-          </TabsContent>
-          
-          <TabsContent value="cards" className="mt-0 w-full">
-            <div className="px-3 sm:px-6 max-w-4xl mx-auto">
-              <CardsTab gameState={gameState} />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="rewards" className="mt-0 w-full">
-            <div className="px-3 sm:px-6 max-w-4xl mx-auto">
-              <RewardsTab gameState={gameState} />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="shop" className="mt-0 w-full">
-            <div className="px-3 sm:px-6 max-w-4xl mx-auto">
-              <ShopTab gameState={gameState} telegramStars={progress.telegram_stars} />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="airdrop" className="mt-0 w-full">
-            <div className="px-3 sm:px-6 max-w-4xl mx-auto">
-              <AirdropTab />
-            </div>
-          </TabsContent>
-        </div>
+          {/* Content - Takes remaining space */}
+          <div className="flex-1 min-h-0 pb-16 md:pb-20">
+            <TabsContent value="home" className="mt-0 w-full h-full">
+              <GameScreen gameState={gameState} autoClickPower={progress.auto_click_power} />
+            </TabsContent>
+            
+            <TabsContent value="cards" className="mt-0 w-full h-full overflow-auto">
+              <div className="px-3 sm:px-6 max-w-4xl mx-auto">
+                <CardsTab gameState={gameState} />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="rewards" className="mt-0 w-full h-full overflow-auto">
+              <div className="px-3 sm:px-6 max-w-4xl mx-auto">
+                <RewardsTab gameState={gameState} />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="shop" className="mt-0 w-full h-full overflow-auto">
+              <div className="px-3 sm:px-6 max-w-4xl mx-auto">
+                <ShopTab gameState={gameState} telegramStars={progress.telegram_stars} />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="airdrop" className="mt-0 w-full h-full overflow-auto">
+              <div className="px-3 sm:px-6 max-w-4xl mx-auto">
+                <AirdropTab />
+              </div>
+            </TabsContent>
+          </div>
 
-        <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+          {/* Navbar - Fixed at bottom */}
+          <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+        </div>
       </Tabs>
     </div>
   );

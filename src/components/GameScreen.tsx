@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Coins, Diamond, Zap } from 'lucide-react';
 import { loadGameData, saveGameData } from '@/utils/gameUtils';
 import { calculateOfflineEarnings, updateLastActiveTime } from '@/utils/backgroundMining';
+import { useOptimisticProgress } from '@/hooks/useOptimisticProgress';
 import OfflineEarningsModal from './OfflineEarningsModal';
 
 interface GameState {
@@ -25,7 +26,7 @@ interface GameScreenProps {
 }
 
 const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
-  const { coins, setCoins, diamonds, level, experience, setExperience, experienceRequired } = gameState;
+  const { level, experienceRequired } = gameState;
   const [clickPower, setClickPower] = useState(1);
   const [clickEffects, setClickEffects] = useState<Array<{ id: number; x: number; y: number }>>([]);
   const [totalClicks, setTotalClicks] = useState(() => loadGameData('totalClicks', 0));
@@ -34,7 +35,34 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
   const [showOfflineModal, setShowOfflineModal] = useState(false);
   const [offlineEarnings, setOfflineEarnings] = useState({ coins: 0, experience: 0, timeOffline: 0 });
 
-  // Check for offline earnings on component mount (only if user has upgraded cards)
+  // Use optimistic updates for immediate UI feedback
+  const { addOptimisticUpdate, getOptimisticValue, hasPendingUpdates } = useOptimisticProgress(
+    { 
+      coins: gameState.coins, 
+      diamonds: gameState.diamonds, 
+      experience: gameState.experience,
+      level,
+      experienceRequired
+    } as any,
+    async (updates) => {
+      if (updates.coins !== undefined) {
+        gameState.setCoins(gameState.coins + updates.coins);
+      }
+      if (updates.diamonds !== undefined) {
+        gameState.setDiamonds(gameState.diamonds + updates.diamonds);
+      }
+      if (updates.experience !== undefined) {
+        gameState.setExperience(gameState.experience + updates.experience);
+      }
+    }
+  );
+
+  // Get optimistic values for display
+  const coins = getOptimisticValue('coins');
+  const diamonds = getOptimisticValue('diamonds');
+  const experience = getOptimisticValue('experience');
+
+  // Check for offline earnings on component mount
   useEffect(() => {
     const currentUpgrades = parseInt(localStorage.getItem('cardUpgrades') || '0');
     if (currentUpgrades > 0) {
@@ -71,7 +99,6 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
     
-    // Update every 10 seconds when active
     const interval = setInterval(() => {
       if (!document.hidden) {
         updateLastActiveTime();
@@ -85,21 +112,20 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
     };
   }, []);
 
-  // Enhanced auto-click functionality with experience generation
+  // Enhanced auto-click functionality with optimistic updates
   useEffect(() => {
     if (autoClickPower <= 0) return;
 
     const interval = setInterval(() => {
-      setCoins(prev => prev + autoClickPower);
-      // Generate experience from passive mining (1 exp per coin from auto-click)
-      setExperience(prev => prev + autoClickPower);
+      addOptimisticUpdate('coins', autoClickPower);
+      addOptimisticUpdate('experience', autoClickPower);
       updateLastActiveTime();
       
       console.log(`Passive mining: +${autoClickPower} coins, +${autoClickPower} experience`);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [autoClickPower, setCoins, setExperience]);
+  }, [autoClickPower, addOptimisticUpdate]);
 
   // Calculate clicks per minute
   useEffect(() => {
@@ -113,9 +139,9 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    // Add coins and experience
-    setCoins(prev => prev + clickPower);
-    setExperience(prev => prev + 1);
+    // Use optimistic updates for immediate feedback
+    addOptimisticUpdate('coins', clickPower);
+    addOptimisticUpdate('experience', 1);
     
     // Update click tracking
     const newTotalClicks = totalClicks + 1;
@@ -139,15 +165,15 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
   };
 
   const claimOfflineEarnings = () => {
-    setCoins(prev => prev + offlineEarnings.coins);
-    setExperience(prev => prev + offlineEarnings.experience);
+    addOptimisticUpdate('coins', offlineEarnings.coins);
+    addOptimisticUpdate('experience', offlineEarnings.experience);
     updateLastActiveTime();
   };
 
   const experiencePercentage = (experience / experienceRequired) * 100;
 
   return (
-    <div className="w-full min-h-screen flex flex-col px-2 sm:px-4 py-2 sm:py-4 space-y-3 sm:space-y-4">
+    <div className="w-full min-h-screen flex flex-col px-2 sm:px-4 py-2 sm:py-4 space-y-2 sm:space-y-3">
       <OfflineEarningsModal
         isOpen={showOfflineModal}
         onClose={() => setShowOfflineModal(false)}
@@ -156,13 +182,15 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
       />
 
       {/* Stats Header - Full width responsive grid */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
+      <div className="grid grid-cols-2 gap-2 w-full">
         <Card className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/30 p-2 sm:p-3">
           <div className="flex items-center gap-1 sm:gap-2">
             <Coins className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="text-xs sm:text-sm text-black font-medium">Coins</p>
-              <p className="text-sm sm:text-base font-bold text-black truncate">{coins.toLocaleString()}</p>
+              <p className={`text-sm sm:text-base font-bold text-black truncate ${hasPendingUpdates ? 'text-green-600' : ''}`}>
+                {coins.toLocaleString()}
+              </p>
             </div>
           </div>
         </Card>
@@ -189,14 +217,14 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
         </div>
       </Card>
 
-      {/* Main Clicker - Takes most of the remaining space */}
-      <div className="flex-1 flex flex-col items-center justify-center space-y-3 sm:space-y-4 min-h-[400px]">
+      {/* Main Clicker - Takes remaining space, fully responsive */}
+      <div className="flex-1 flex flex-col items-center justify-center space-y-2 sm:space-y-4 min-h-0">
         <Button
           onClick={handleClick}
-          className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 xl:w-64 xl:h-64 rounded-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 transform transition-all duration-150 hover:scale-105 active:scale-95 shadow-2xl border-2 sm:border-4 border-yellow-300/50"
+          className="relative w-24 h-24 xs:w-28 xs:h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 xl:w-56 xl:h-56 rounded-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 transform transition-all duration-150 hover:scale-105 active:scale-95 shadow-2xl border-2 sm:border-4 border-yellow-300/50 max-w-[min(80vw,80vh)]"
         >
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent" />
-          <Zap className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-28 xl:h-28 text-white drop-shadow-lg" />
+          <Zap className="w-8 h-8 xs:w-10 xs:h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 text-white drop-shadow-lg" />
           
           {/* Click Effects */}
           {clickEffects.map((effect) => (
