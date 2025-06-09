@@ -60,27 +60,37 @@ const Index = () => {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,119,198,0.3),transparent_50%)]" />
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full min-h-screen pb-16 md:pb-20">
-        <div className="container mx-auto px-3 md:px-6 lg:px-8 pt-4 md:pt-6 max-w-sm md:max-w-4xl lg:max-w-6xl">
-          <UserProfile user={user} onLogout={logout} />
+        <div className="w-full pt-2 sm:pt-4">
+          <div className="px-3 sm:px-6 max-w-4xl mx-auto">
+            <UserProfile user={user} onLogout={logout} />
+          </div>
           
-          <TabsContent value="home" className="mt-0">
+          <TabsContent value="home" className="mt-0 w-full">
             <GameScreen gameState={gameState} autoClickPower={progress.auto_click_power} />
           </TabsContent>
           
-          <TabsContent value="cards" className="mt-0">
-            <CardsTab gameState={gameState} />
+          <TabsContent value="cards" className="mt-0 w-full">
+            <div className="px-3 sm:px-6 max-w-4xl mx-auto">
+              <CardsTab gameState={gameState} />
+            </div>
           </TabsContent>
           
-          <TabsContent value="rewards" className="mt-0">
-            <RewardsTab gameState={gameState} />
+          <TabsContent value="rewards" className="mt-0 w-full">
+            <div className="px-3 sm:px-6 max-w-4xl mx-auto">
+              <RewardsTab gameState={gameState} />
+            </div>
           </TabsContent>
           
-          <TabsContent value="shop" className="mt-0">
-            <ShopTab gameState={gameState} telegramStars={progress.telegram_stars} />
+          <TabsContent value="shop" className="mt-0 w-full">
+            <div className="px-3 sm:px-6 max-w-4xl mx-auto">
+              <ShopTab gameState={gameState} telegramStars={progress.telegram_stars} />
+            </div>
           </TabsContent>
           
-          <TabsContent value="airdrop" className="mt-0">
-            <AirdropTab />
+          <TabsContent value="airdrop" className="mt-0 w-full">
+            <div className="px-3 sm:px-6 max-w-4xl mx-auto">
+              <AirdropTab />
+            </div>
           </TabsContent>
         </div>
 

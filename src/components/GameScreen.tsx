@@ -34,12 +34,15 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
   const [showOfflineModal, setShowOfflineModal] = useState(false);
   const [offlineEarnings, setOfflineEarnings] = useState({ coins: 0, experience: 0, timeOffline: 0 });
 
-  // Check for offline earnings on component mount
+  // Check for offline earnings on component mount (only if user has upgraded cards)
   useEffect(() => {
-    const earnings = calculateOfflineEarnings();
-    if (earnings.coins > 0 || earnings.experience > 0) {
-      setOfflineEarnings(earnings);
-      setShowOfflineModal(true);
+    const currentUpgrades = parseInt(localStorage.getItem('cardUpgrades') || '0');
+    if (currentUpgrades > 0) {
+      const earnings = calculateOfflineEarnings();
+      if (earnings.coins > 0 || earnings.experience > 0) {
+        setOfflineEarnings(earnings);
+        setShowOfflineModal(true);
+      }
     }
     updateLastActiveTime();
   }, []);
@@ -50,10 +53,13 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
       if (document.hidden) {
         updateLastActiveTime();
       } else {
-        const earnings = calculateOfflineEarnings();
-        if (earnings.coins > 0 || earnings.experience > 0) {
-          setOfflineEarnings(earnings);
-          setShowOfflineModal(true);
+        const currentUpgrades = parseInt(localStorage.getItem('cardUpgrades') || '0');
+        if (currentUpgrades > 0) {
+          const earnings = calculateOfflineEarnings();
+          if (earnings.coins > 0 || earnings.experience > 0) {
+            setOfflineEarnings(earnings);
+            setShowOfflineModal(true);
+          }
         }
       }
     };
@@ -141,7 +147,7 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
   const experiencePercentage = (experience / experienceRequired) * 100;
 
   return (
-    <div className="space-y-3 md:space-y-4 lg:space-y-6 max-w-sm md:max-w-2xl lg:max-w-4xl mx-auto px-2 md:px-4">
+    <div className="w-full min-h-screen flex flex-col px-2 sm:px-4 py-2 sm:py-4 space-y-3 sm:space-y-4">
       <OfflineEarningsModal
         isOpen={showOfflineModal}
         onClose={() => setShowOfflineModal(false)}
@@ -149,48 +155,48 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
         onClaim={claimOfflineEarnings}
       />
 
-      {/* Stats Header - Responsive Grid */}
-      <div className="grid grid-cols-2 gap-2 md:gap-3 lg:gap-4">
-        <Card className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/30 p-2 md:p-3 lg:p-4">
-          <div className="flex items-center gap-1 md:gap-2 lg:gap-3">
-            <Coins className="w-3 h-3 md:w-4 md:h-4 lg:w-5 lg:h-5 text-yellow-400 flex-shrink-0" />
+      {/* Stats Header - Full width responsive grid */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 w-full">
+        <Card className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-yellow-500/30 p-2 sm:p-3">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Coins className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400 flex-shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="text-xs md:text-sm text-black font-medium">Coins</p>
-              <p className="text-xs md:text-sm lg:text-base font-bold text-black truncate">{coins.toLocaleString()}</p>
+              <p className="text-xs sm:text-sm text-black font-medium">Coins</p>
+              <p className="text-sm sm:text-base font-bold text-black truncate">{coins.toLocaleString()}</p>
             </div>
           </div>
         </Card>
         
-        <Card className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/30 p-2 md:p-3 lg:p-4">
-          <div className="flex items-center gap-1 md:gap-2 lg:gap-3">
-            <Diamond className="w-3 h-3 md:w-4 md:h-4 lg:w-5 lg:h-5 text-blue-400 flex-shrink-0" />
+        <Card className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/30 p-2 sm:p-3">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Diamond className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
             <div className="min-w-0 flex-1">
-              <p className="text-xs md:text-sm text-black font-medium">Diamonds</p>
-              <p className="text-xs md:text-sm lg:text-base font-bold text-black truncate">{diamonds.toLocaleString()}</p>
+              <p className="text-xs sm:text-sm text-black font-medium">Diamonds</p>
+              <p className="text-sm sm:text-base font-bold text-black truncate">{diamonds.toLocaleString()}</p>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Level Progress - Responsive */}
-      <Card className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 p-2 md:p-3 lg:p-4">
-        <div className="space-y-1 md:space-y-2">
+      {/* Level Progress - Full width */}
+      <Card className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 p-2 sm:p-3 w-full">
+        <div className="space-y-1 sm:space-y-2">
           <div className="flex justify-between items-center">
-            <span className="text-xs md:text-sm text-black font-medium">Level {level}</span>
-            <span className="text-xs md:text-sm text-black font-medium">{experience.toLocaleString()} / {experienceRequired.toLocaleString()}</span>
+            <span className="text-xs sm:text-sm text-black font-medium">Level {level}</span>
+            <span className="text-xs sm:text-sm text-black font-medium">{experience.toLocaleString()} / {experienceRequired.toLocaleString()}</span>
           </div>
-          <Progress value={experiencePercentage} className="h-1 md:h-2 lg:h-3 bg-purple-900/50" />
+          <Progress value={experiencePercentage} className="h-2 sm:h-3 bg-purple-900/50" />
         </div>
       </Card>
 
-      {/* Main Clicker - Responsive */}
-      <div className="flex flex-col items-center space-y-2 md:space-y-3 lg:space-y-4">
+      {/* Main Clicker - Takes most of the remaining space */}
+      <div className="flex-1 flex flex-col items-center justify-center space-y-3 sm:space-y-4 min-h-[400px]">
         <Button
           onClick={handleClick}
-          className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 xl:w-48 xl:h-48 rounded-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 transform transition-all duration-150 hover:scale-105 active:scale-95 shadow-2xl border-1 md:border-2 lg:border-4 border-yellow-300/50"
+          className="relative w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 xl:w-64 xl:h-64 rounded-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 transform transition-all duration-150 hover:scale-105 active:scale-95 shadow-2xl border-2 sm:border-4 border-yellow-300/50"
         >
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent" />
-          <Zap className="w-8 h-8 md:w-12 md:h-12 lg:w-16 lg:h-16 xl:w-20 xl:h-20 text-white drop-shadow-lg" />
+          <Zap className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 xl:w-28 xl:h-28 text-white drop-shadow-lg" />
           
           {/* Click Effects */}
           {clickEffects.map((effect) => (
@@ -203,7 +209,7 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
                 transform: 'translate(-50%, -50%)',
               }}
             >
-              <span className="text-yellow-300 font-bold text-sm md:text-lg lg:text-xl drop-shadow-lg animate-fade-in">
+              <span className="text-yellow-300 font-bold text-sm sm:text-lg md:text-xl drop-shadow-lg animate-fade-in">
                 +{clickPower}
               </span>
             </div>
@@ -211,25 +217,25 @@ const GameScreen = ({ gameState, autoClickPower }: GameScreenProps) => {
         </Button>
         
         <div className="text-center space-y-1">
-          <p className="text-sm md:text-base lg:text-lg font-bold text-yellow-300">Click Power: {clickPower}</p>
-          <p className="text-xs md:text-sm text-gray-300">Tap to earn coins!</p>
+          <p className="text-sm sm:text-base md:text-lg font-bold text-yellow-300">Click Power: {clickPower}</p>
+          <p className="text-xs sm:text-sm text-gray-300">Tap to earn coins!</p>
           {autoClickPower > 0 && (
-            <p className="text-xs md:text-sm text-green-300">Auto-Mining: +{autoClickPower}/sec</p>
+            <p className="text-xs sm:text-sm text-green-300">Auto-Mining: +{autoClickPower}/sec</p>
           )}
         </div>
       </div>
 
-      {/* Quick Stats - Responsive Grid */}
-      <div className="grid grid-cols-3 gap-1 md:gap-2 lg:gap-3 text-center text-xs md:text-sm">
-        <div className="bg-white/10 rounded-lg p-1 md:p-2 lg:p-3">
+      {/* Quick Stats - Full width at bottom */}
+      <div className="grid grid-cols-3 gap-1 sm:gap-2 text-center text-xs sm:text-sm w-full">
+        <div className="bg-white/10 rounded-lg p-2">
           <p className="text-gray-400">Clicks/Min</p>
           <p className="font-bold text-white">{clicksPerMinute}</p>
         </div>
-        <div className="bg-white/10 rounded-lg p-1 md:p-2 lg:p-3">
+        <div className="bg-white/10 rounded-lg p-2">
           <p className="text-gray-400">Total Clicks</p>
           <p className="font-bold text-white">{totalClicks.toLocaleString()}</p>
         </div>
-        <div className="bg-white/10 rounded-lg p-1 md:p-2 lg:p-3">
+        <div className="bg-white/10 rounded-lg p-2">
           <p className="text-gray-400">Auto-Click</p>
           <p className="font-bold text-white">{autoClickPower}/sec</p>
         </div>

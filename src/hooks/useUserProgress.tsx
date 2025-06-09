@@ -124,7 +124,7 @@ export const useUserProgress = () => {
     let newLevel = progress.level;
     let newExpRequired = progress.experience_required;
 
-    // Level up logic
+    // Level up logic with 1M base and x2 multiplier
     if (newExperience >= progress.experience_required) {
       newLevel++;
       newExpRequired = progress.experience_required * 2;
@@ -146,7 +146,7 @@ export const useUserProgress = () => {
     await updateProgress({ auto_click_power: power });
   };
 
-  // Fixed daily reward claim function
+  // Fixed daily reward claim function with proper date handling
   const claimDailyReward = async (): Promise<{ success: boolean; coins?: number; diamonds?: number; alreadyClaimed?: boolean }> => {
     if (!progress) return { success: false };
 
@@ -154,10 +154,16 @@ export const useUserProgress = () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) return { success: false };
 
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+      // Get today's date in YYYY-MM-DD format in local timezone
+      const today = new Date();
+      const todayString = today.getFullYear() + '-' + 
+        String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(today.getDate()).padStart(2, '0');
+      
+      console.log('Today:', todayString, 'Last claim:', progress.last_daily_reward);
       
       // Check if user already claimed today
-      if (progress.last_daily_reward === today) {
+      if (progress.last_daily_reward === todayString) {
         return { success: false, alreadyClaimed: true };
       }
 
@@ -173,12 +179,12 @@ export const useUserProgress = () => {
         return { success: false };
       }
 
-      // Calculate rewards based on level (base rewards)
+      // Calculate rewards based on level with random bonus
       const baseCoins = 1000;
       const baseDiamonds = 1;
       
       // Add some randomness to rewards (10-50% bonus)
-      const randomBonus = 0.1 + Math.random() * 0.4; // 10% to 50% bonus
+      const randomBonus = 0.1 + Math.random() * 0.4;
       const coinsReward = Math.floor(baseCoins * progress.level * (1 + randomBonus));
       const diamondsReward = Math.floor((baseDiamonds + Math.floor(progress.level / 5)) * (1 + randomBonus));
 
@@ -191,7 +197,7 @@ export const useUserProgress = () => {
         .update({
           coins: newCoins,
           diamonds: newDiamonds,
-          last_daily_reward: today
+          last_daily_reward: todayString
         })
         .eq('user_id', authUser.id);
 
@@ -202,7 +208,7 @@ export const useUserProgress = () => {
         ...prev,
         coins: newCoins,
         diamonds: newDiamonds,
-        last_daily_reward: today
+        last_daily_reward: todayString
       } : null);
 
       toast({

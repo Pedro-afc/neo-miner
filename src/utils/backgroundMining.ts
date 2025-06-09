@@ -8,6 +8,18 @@ export interface OfflineEarnings {
 }
 
 export const calculateOfflineEarnings = (): OfflineEarnings => {
+  // Check if user has upgraded any cards
+  const currentUpgrades = parseInt(localStorage.getItem('cardUpgrades') || '0');
+  
+  // Only calculate offline earnings if user has at least 1 card upgrade
+  if (currentUpgrades === 0) {
+    return {
+      coins: 0,
+      experience: 0,
+      timeOffline: 0
+    };
+  }
+
   const lastActiveTime = loadGameData('lastActiveTime', Date.now());
   const autoClickPower = loadGameData('autoClickPower', 0);
   const currentTime = Date.now();
