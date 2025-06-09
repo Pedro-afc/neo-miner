@@ -4,14 +4,34 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Plane, Calendar, Users, Trophy, Coins, CheckCircle, Clock } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const AirdropTab = () => {
+  // Fetch real user count from profiles table
+  const { data: userCount = 0 } = useQuery({
+    queryKey: ['user-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      
+      if (error) {
+        console.error('Error fetching user count:', error);
+        return 0;
+      }
+      
+      return count || 0;
+    },
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
+
   const airdropData = {
     name: "TapCoin Airdrop",
-    totalPool: "10,000,000 TAPCOIN",
-    startDate: "15 Diciembre 2024",
-    endDate: "15 Enero 2025",
-    participants: 125847,
+    totalPool: "21M TAPCOIN",
+    startDate: "1 Julio 2025",
+    endDate: "Pendiente",
+    participants: userCount,
     maxParticipants: 1000000,
     userEligible: true,
     completedTasks: 3,
@@ -78,7 +98,7 @@ const AirdropTab = () => {
         <h2 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent drop-shadow-lg">
           Airdrop TapCoin
         </h2>
-        <p className="text-white text-sm mt-1 font-semibold drop-shadow-md">Participa y gana tokens gratis</p>
+        <p className="text-cyan-100 text-sm mt-1 font-semibold drop-shadow-md">Participa y gana tokens gratis</p>
       </div>
 
       {/* Airdrop Info */}
@@ -88,25 +108,25 @@ const AirdropTab = () => {
             <Plane className="w-8 h-8 text-white drop-shadow-lg" />
           </div>
           <h3 className="text-xl font-bold text-white drop-shadow-md">{airdropData.name}</h3>
-          <p className="text-cyan-200 font-semibold drop-shadow-md">Pool Total: {airdropData.totalPool}</p>
+          <p className="text-cyan-100 font-semibold drop-shadow-md">Pool Total: {airdropData.totalPool}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-center bg-black/20 rounded-lg p-3 backdrop-blur-sm">
             <Calendar className="w-5 h-5 mx-auto text-cyan-300 mb-1 drop-shadow-lg" />
-            <p className="text-xs text-cyan-200 font-medium">Inicio</p>
+            <p className="text-xs text-cyan-100 font-medium">Inicio</p>
             <p className="text-sm font-bold text-white drop-shadow-md">{airdropData.startDate}</p>
           </div>
           <div className="text-center bg-black/20 rounded-lg p-3 backdrop-blur-sm">
             <Clock className="w-5 h-5 mx-auto text-cyan-300 mb-1 drop-shadow-lg" />
-            <p className="text-xs text-cyan-200 font-medium">Fin</p>
+            <p className="text-xs text-cyan-100 font-medium">Fin</p>
             <p className="text-sm font-bold text-white drop-shadow-md">{airdropData.endDate}</p>
           </div>
         </div>
 
         <div className="space-y-2 bg-black/20 rounded-lg p-3 backdrop-blur-sm">
           <div className="flex justify-between text-sm">
-            <span className="text-cyan-200 font-medium drop-shadow-sm">Participantes</span>
+            <span className="text-cyan-100 font-medium drop-shadow-sm">Participantes</span>
             <span className="text-white font-bold drop-shadow-md">
               {airdropData.participants.toLocaleString()} / {airdropData.maxParticipants.toLocaleString()}
             </span>
@@ -119,14 +139,14 @@ const AirdropTab = () => {
       <Card className="bg-gradient-to-r from-green-500/30 to-emerald-500/30 border-green-500/50 p-4 backdrop-blur-md">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-bold text-white drop-shadow-md">Tu Progreso</h3>
-          <Badge className="bg-green-500/30 text-green-200 border-green-400/50 font-semibold">
+          <Badge className="bg-green-500/30 text-green-100 border-green-400/50 font-semibold">
             Elegible
           </Badge>
         </div>
         
         <div className="space-y-2 mb-4 bg-black/20 rounded-lg p-3 backdrop-blur-sm">
           <div className="flex justify-between text-sm">
-            <span className="text-green-200 font-medium drop-shadow-sm">Tareas Completadas</span>
+            <span className="text-green-100 font-medium drop-shadow-sm">Tareas Completadas</span>
             <span className="text-white font-bold drop-shadow-md">
               {airdropData.completedTasks} / {airdropData.totalTasks}
             </span>
@@ -135,8 +155,8 @@ const AirdropTab = () => {
         </div>
 
         <div className="text-center bg-black/20 rounded-lg p-3 backdrop-blur-sm">
-          <p className="text-sm text-green-200 mb-2 font-medium drop-shadow-sm">Tokens Estimados</p>
-          <p className="text-2xl font-bold text-green-300 drop-shadow-lg">8,800 TAPCOIN</p>
+          <p className="text-sm text-green-100 mb-2 font-medium drop-shadow-sm">Tokens Estimados</p>
+          <p className="text-2xl font-bold text-yellow-300 drop-shadow-lg">Pendiente</p>
         </div>
       </Card>
 
@@ -169,7 +189,7 @@ const AirdropTab = () => {
                   </div>
                   <div>
                     <h4 className="font-bold text-white text-sm drop-shadow-md">{task.title}</h4>
-                    <p className="text-xs text-gray-200 drop-shadow-sm">{task.description}</p>
+                    <p className="text-xs text-gray-100 drop-shadow-sm">{task.description}</p>
                     <p className="text-xs text-yellow-300 font-medium drop-shadow-sm">{task.reward}</p>
                   </div>
                 </div>
@@ -180,7 +200,7 @@ const AirdropTab = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20 backdrop-blur-sm bg-black/20 font-semibold"
+                    className="border-cyan-500/50 text-cyan-200 hover:bg-cyan-500/20 backdrop-blur-sm bg-black/20 font-semibold"
                   >
                     Completar
                   </Button>
