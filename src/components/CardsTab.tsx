@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Coins, Diamond, Zap, Clock, Star, Crown, Rocket, Bot, TrendingUp, Cpu, Factory, Sparkles, Target, Shield, Gem, Hammer, Wrench, Cog, Wifi } from 'lucide-react';
+import { Coins, Diamond, Zap, Clock, Star, Crown, Rocket, Bot, TrendingUp, Cpu, Factory, Sparkles, Target, Shield, Gem, Hammer, Wrench, Cog, Wifi, Layers, Database } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { useUserCards } from '@/hooks/useUserCards';
 import { useUserProgress } from '@/hooks/useUserProgress';
@@ -40,7 +40,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
   const [selectedCategory, setSelectedCategory] = useState('mining');
 
   const cardData: CardData[] = [
-    // Mining Cards
+    // Mining Cards (8 total)
     {
       id: 'basic_miner',
       name: 'Basic Miner',
@@ -62,12 +62,32 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       category: 'mining'
     },
     {
+      id: 'nano_assembler',
+      name: 'Nano Assembler',
+      description: 'Molecular-level resource construction',
+      icon: Cpu,
+      basePrice: 750,
+      baseExpBonus: 35,
+      rarity: 'rare',
+      category: 'mining'
+    },
+    {
       id: 'quantum_extractor',
       name: 'Quantum Extractor',
       description: 'Extracts resources from quantum dimensions',
       icon: Star,
       basePrice: 2500,
       baseExpBonus: 75,
+      rarity: 'epic',
+      category: 'mining'
+    },
+    {
+      id: 'plasma_forge',
+      name: 'Plasma Forge',
+      description: 'Forges materials using stellar plasma',
+      icon: Factory,
+      basePrice: 5000,
+      baseExpBonus: 100,
       rarity: 'epic',
       category: 'mining'
     },
@@ -82,36 +102,6 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       category: 'mining'
     },
     {
-      id: 'universal_core',
-      name: 'Universal Core',
-      description: 'The ultimate mining technology',
-      icon: Rocket,
-      basePrice: 100000,
-      baseExpBonus: 1000,
-      rarity: 'mythic',
-      category: 'mining'
-    },
-    {
-      id: 'nano_assembler',
-      name: 'Nano Assembler',
-      description: 'Molecular-level resource construction',
-      icon: Cpu,
-      basePrice: 750,
-      baseExpBonus: 35,
-      rarity: 'rare',
-      category: 'mining'
-    },
-    {
-      id: 'plasma_forge',
-      name: 'Plasma Forge',
-      description: 'Forges materials using stellar plasma',
-      icon: Factory,
-      basePrice: 5000,
-      baseExpBonus: 100,
-      rarity: 'epic',
-      category: 'mining'
-    },
-    {
       id: 'void_processor',
       name: 'Void Processor',
       description: 'Processes dark matter into energy',
@@ -121,8 +111,18 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       rarity: 'legendary',
       category: 'mining'
     },
+    {
+      id: 'universal_core',
+      name: 'Universal Core',
+      description: 'The ultimate mining technology',
+      icon: Rocket,
+      basePrice: 100000,
+      baseExpBonus: 1000,
+      rarity: 'mythic',
+      category: 'mining'
+    },
 
-    // Business Cards
+    // Business Cards (8 total)
     {
       id: 'coffee_shop',
       name: 'Coffee Shop',
@@ -134,32 +134,22 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       category: 'business'
     },
     {
-      id: 'tech_startup',
-      name: 'Tech Startup',
-      description: 'Innovative technology company',
-      icon: Zap,
-      basePrice: 1000,
-      baseExpBonus: 40,
-      rarity: 'rare',
-      category: 'business'
-    },
-    {
-      id: 'global_corporation',
-      name: 'Global Corporation',
-      description: 'Multinational business empire',
-      icon: Crown,
-      basePrice: 25000,
-      baseExpBonus: 300,
-      rarity: 'legendary',
-      category: 'business'
-    },
-    {
       id: 'delivery_service',
       name: 'Delivery Service',
       description: 'Fast and reliable delivery network',
       icon: Target,
       basePrice: 600,
       baseExpBonus: 28,
+      rarity: 'rare',
+      category: 'business'
+    },
+    {
+      id: 'tech_startup',
+      name: 'Tech Startup',
+      description: 'Innovative technology company',
+      icon: Zap,
+      basePrice: 1000,
+      baseExpBonus: 40,
       rarity: 'rare',
       category: 'business'
     },
@@ -174,6 +164,26 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       category: 'business'
     },
     {
+      id: 'media_empire',
+      name: 'Media Empire',
+      description: 'Control entertainment worldwide',
+      icon: Layers,
+      basePrice: 8000,
+      baseExpBonus: 140,
+      rarity: 'epic',
+      category: 'business'
+    },
+    {
+      id: 'global_corporation',
+      name: 'Global Corporation',
+      description: 'Multinational business empire',
+      icon: Crown,
+      basePrice: 25000,
+      baseExpBonus: 300,
+      rarity: 'legendary',
+      category: 'business'
+    },
+    {
       id: 'space_tourism',
       name: 'Space Tourism',
       description: 'Take people to the stars',
@@ -183,8 +193,18 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       rarity: 'mythic',
       category: 'business'
     },
+    {
+      id: 'metaverse_platform',
+      name: 'Metaverse Platform',
+      description: 'Build the future of virtual reality',
+      icon: Database,
+      basePrice: 150000,
+      baseExpBonus: 1200,
+      rarity: 'mythic',
+      category: 'business'
+    },
 
-    // Investment Cards
+    // Investment Cards (8 total)
     {
       id: 'stock_portfolio',
       name: 'Stock Portfolio',
@@ -192,6 +212,16 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       icon: TrendingUp,
       basePrice: 800,
       baseExpBonus: 30,
+      rarity: 'rare',
+      category: 'investment'
+    },
+    {
+      id: 'precious_metals',
+      name: 'Precious Metals',
+      description: 'Gold, silver, and rare metals',
+      icon: Gem,
+      basePrice: 1500,
+      baseExpBonus: 50,
       rarity: 'rare',
       category: 'investment'
     },
@@ -206,26 +236,6 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       category: 'investment'
     },
     {
-      id: 'crypto_fund',
-      name: 'Crypto Investment Fund',
-      description: 'Digital asset management',
-      icon: Diamond,
-      basePrice: 50000,
-      baseExpBonus: 500,
-      rarity: 'mythic',
-      category: 'investment'
-    },
-    {
-      id: 'precious_metals',
-      name: 'Precious Metals',
-      description: 'Gold, silver, and rare metals',
-      icon: Gem,
-      basePrice: 1500,
-      baseExpBonus: 50,
-      rarity: 'rare',
-      category: 'investment'
-    },
-    {
       id: 'art_collection',
       name: 'Art Collection',
       description: 'Masterpieces that appreciate',
@@ -233,6 +243,26 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       basePrice: 8000,
       baseExpBonus: 150,
       rarity: 'epic',
+      category: 'investment'
+    },
+    {
+      id: 'private_equity',
+      name: 'Private Equity Fund',
+      description: 'Exclusive investment opportunities',
+      icon: Shield,
+      basePrice: 30000,
+      baseExpBonus: 350,
+      rarity: 'legendary',
+      category: 'investment'
+    },
+    {
+      id: 'crypto_fund',
+      name: 'Crypto Investment Fund',
+      description: 'Digital asset management',
+      icon: Diamond,
+      basePrice: 50000,
+      baseExpBonus: 500,
+      rarity: 'legendary',
       category: 'investment'
     },
     {
@@ -245,8 +275,18 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       rarity: 'mythic',
       category: 'investment'
     },
+    {
+      id: 'sovereign_wealth',
+      name: 'Sovereign Wealth Fund',
+      description: 'Nation-level investment power',
+      icon: Crown,
+      basePrice: 500000,
+      baseExpBonus: 3000,
+      rarity: 'mythic',
+      category: 'investment'
+    },
 
-    // Technology Cards
+    // Technology Cards (8 total)
     {
       id: 'ai_assistant',
       name: 'AI Assistant',
@@ -255,16 +295,6 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       basePrice: 400,
       baseExpBonus: 20,
       rarity: 'common',
-      category: 'technology'
-    },
-    {
-      id: 'quantum_computer',
-      name: 'Quantum Computer',
-      description: 'Next-gen computing power',
-      icon: Zap,
-      basePrice: 12000,
-      baseExpBonus: 180,
-      rarity: 'legendary',
       category: 'technology'
     },
     {
@@ -285,6 +315,56 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       basePrice: 6000,
       baseExpBonus: 135,
       rarity: 'epic',
+      category: 'technology'
+    },
+    {
+      id: 'quantum_computer',
+      name: 'Quantum Computer',
+      description: 'Next-gen computing power',
+      icon: Zap,
+      basePrice: 12000,
+      baseExpBonus: 180,
+      rarity: 'legendary',
+      category: 'technology'
+    },
+    {
+      id: 'blockchain_network',
+      name: 'Blockchain Network',
+      description: 'Decentralized computing infrastructure',
+      icon: Database,
+      basePrice: 20000,
+      baseExpBonus: 250,
+      rarity: 'legendary',
+      category: 'technology'
+    },
+    {
+      id: 'fusion_reactor',
+      name: 'Fusion Reactor',
+      description: 'Unlimited clean energy',
+      icon: Star,
+      basePrice: 80000,
+      baseExpBonus: 700,
+      rarity: 'mythic',
+      category: 'technology'
+    },
+    {
+      id: 'time_machine',
+      name: 'Time Machine',
+      description: 'Manipulate the flow of time',
+      icon: Clock,
+      basePrice: 300000,
+      baseExpBonus: 2000,
+      rarity: 'mythic',
+      category: 'technology'
+    },
+    {
+      id: 'singularity_core',
+      name: 'Singularity Core',
+      description: 'Artificial superintelligence',
+      icon: Sparkles,
+      basePrice: 1000000,
+      baseExpBonus: 5000,
+      rarity: 'mythic',
       category: 'technology'
     }
   ];
@@ -421,7 +501,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
         )}
       </div>
 
-      {/* Category Navigation */}
+      {/* Category Navigation - Responsive */}
       <div className="flex space-x-1 bg-gray-900/80 p-1 rounded-xl backdrop-blur-sm border border-gray-600">
         {categories.map((category) => {
           const Icon = category.icon;
@@ -430,14 +510,16 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
               key={category.id}
               onClick={() => setSelectedCategory(category.id)}
               variant="ghost"
-              className={`flex-1 flex items-center justify-center gap-2 rounded-lg transition-all duration-200 ${
+              className={`flex-1 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 rounded-lg transition-all duration-200 py-2 px-2 sm:px-3 ${
                 selectedCategory === category.id
                   ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
                   : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
             >
-              <Icon className="w-4 h-4" />
-              <span className="font-bold text-xs">{category.name.toUpperCase()}</span>
+              <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+              <span className="font-bold text-xs sm:text-sm text-center leading-tight">
+                {category.name.toUpperCase()}
+              </span>
             </Button>
           );
         })}
