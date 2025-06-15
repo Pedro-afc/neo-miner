@@ -1,11 +1,15 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTelegramAuth } from './useTelegramAuth';
+import { useOptimisticProgress } from './useOptimisticProgress';
+import { calculateExperienceRequired, calculateLevelFromExperience } from '@/utils/gameUtils';
+import { getTelegramStars } from '@/utils/telegramWalletUtils';
 import { toast } from '@/hooks/use-toast';
 
 export interface UserProgress {
   id: string;
+  user_id: string;
   coins: number;
   diamonds: number;
   telegram_stars: number;
@@ -13,50 +17,94 @@ export interface UserProgress {
   experience: number;
   experience_required: number;
   auto_click_power: number;
-  last_daily_reward: string | null;
+  last_daily_reward?: string;
   upgrade_rewards_claimed: number;
+  created_at: string;
+  updated_at: string;
 }
+
+// Cache for authentication state
+let authCache: { user: any; timestamp: number } | null = null;
+const AUTH_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 export const useUserProgress = () => {
   const { user } = useTelegramAuth();
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user) {
-      loadUserProgress();
+  const { addOptimisticUpdate, getOptimisticValue } = useOptimisticProgress(
+    progress,
+    updateProgressInDB
+  );
+
+  // Update progress in database with retry logic
+  async function updateProgressInDB(updates: Partial<UserProgress>, retryCount = 0): Promise<void> {
+    const maxRetries = 3;
+    const baseDelay = 1000;
+
+    try {
+      // Use cached auth if available and recent
+      let authUser;
+      const now = Date.now();
       
-      // Subscribe to real-time updates
-      const channel = supabase
-        .channel('user_progress_changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'user_progress',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            if (payload.new) {
-              setProgress(payload.new as UserProgress);
-            }
-          }
-        )
-        .subscribe();
+      if (authCache && (now - authCache.timestamp) < AUTH_CACHE_DURATION) {
+        authUser = authCache.user;
+      } else {
+        const { data: { user: freshUser }, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        
+        authUser = freshUser;
+        authCache = { user: authUser, timestamp: now };
+      }
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
+      if (!authUser) throw new Error('No authenticated user');
+
+      const { error } = await supabase
+        .from('user_progress')
+        .update(updates)
+        .eq('user_id', authUser.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setProgress(prev => prev ? { ...prev, ...updates } : null);
+      
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      
+      if (retryCount < maxRetries) {
+        const delay = baseDelay * Math.pow(2, retryCount);
+        console.log(`Retrying in ${delay}ms... (attempt ${retryCount + 1}/${maxRetries})`);
+        
+        setTimeout(() => {
+          updateProgressInDB(updates, retryCount + 1);
+        }, delay);
+      } else {
+        // Clear auth cache on persistent errors
+        authCache = null;
+        throw error;
+      }
     }
-  }, [user]);
+  }
 
-  const loadUserProgress = async () => {
+  const loadUserProgress = useCallback(async () => {
     if (!user) return;
 
     try {
-      // Get the authenticated user's UUID
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      // Use cached auth if available
+      let authUser;
+      const now = Date.now();
+      
+      if (authCache && (now - authCache.timestamp) < AUTH_CACHE_DURATION) {
+        authUser = authCache.user;
+      } else {
+        const { data: { user: freshUser } } = await supabase.auth.getUser();
+        authUser = freshUser;
+        if (authUser) {
+          authCache = { user: authUser, timestamp: now };
+        }
+      }
+
       if (!authUser) return;
 
       const { data, error } = await supabase
@@ -70,7 +118,45 @@ export const useUserProgress = () => {
       }
 
       if (data) {
-        setProgress(data);
+        // Get real Telegram Stars and update if different
+        const realStars = await getTelegramStars();
+        
+        let updatedData = { ...data };
+        
+        // Always use 1,000,000 as experience required
+        updatedData.experience_required = 1000000;
+        
+        // Update level based on experience and new requirement
+        const newLevel = calculateLevelFromExperience(data.experience);
+        if (newLevel !== data.level) {
+          updatedData.level = newLevel;
+        }
+        
+        // Update Telegram Stars if different
+        if (realStars !== data.telegram_stars) {
+          updatedData.telegram_stars = realStars;
+          
+          // Update in database
+          await supabase
+            .from('user_progress')
+            .update({ 
+              telegram_stars: realStars,
+              experience_required: 1000000,
+              level: newLevel
+            })
+            .eq('user_id', authUser.id);
+        } else if (newLevel !== data.level || data.experience_required !== 1000000) {
+          // Update level and experience requirement
+          await supabase
+            .from('user_progress')
+            .update({ 
+              experience_required: 1000000,
+              level: newLevel
+            })
+            .eq('user_id', authUser.id);
+        }
+        
+        setProgress(updatedData);
       }
     } catch (error) {
       console.error('Error loading user progress:', error);
@@ -81,161 +167,50 @@ export const useUserProgress = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const updateProgress = async (updates: Partial<UserProgress>) => {
-    if (!user || !progress) return;
+  useEffect(() => {
+    loadUserProgress();
+  }, [loadUserProgress]);
 
+  const addCoins = useCallback((amount: number) => {
+    addOptimisticUpdate('coins', amount);
+  }, [addOptimisticUpdate]);
+
+  const addDiamonds = useCallback((amount: number) => {
+    addOptimisticUpdate('diamonds', amount);
+  }, [addOptimisticUpdate]);
+
+  const addExperience = useCallback((amount: number) => {
+    addOptimisticUpdate('experience', amount);
+  }, [addOptimisticUpdate]);
+
+  const updateAutoClickPower = useCallback(async (newPower: number) => {
+    if (!progress) return;
+    
     try {
-      // Get the authenticated user's UUID
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) return;
-
-      const { error } = await supabase
-        .from('user_progress')
-        .update(updates)
-        .eq('user_id', authUser.id);
-
-      if (error) throw error;
-
-      setProgress(prev => prev ? { ...prev, ...updates } : null);
+      await updateProgressInDB({ auto_click_power: newPower });
     } catch (error) {
-      console.error('Error updating progress:', error);
-      toast({
-        description: "Error saving progress",
-        variant: "destructive",
-      });
+      console.error('Error updating auto-click power:', error);
     }
-  };
+  }, [progress]);
 
-  const addCoins = async (amount: number) => {
-    if (!progress) return;
-    await updateProgress({ coins: progress.coins + amount });
-  };
-
-  const addDiamonds = async (amount: number) => {
-    if (!progress) return;
-    await updateProgress({ diamonds: progress.diamonds + amount });
-  };
-
-  const addExperience = async (amount: number) => {
-    if (!progress) return;
-    const newExperience = progress.experience + amount;
-    let newLevel = progress.level;
-    let newExpRequired = progress.experience_required;
-
-    // Level up logic with 1M base and x2 multiplier
-    if (newExperience >= progress.experience_required) {
-      newLevel++;
-      newExpRequired = progress.experience_required * 2;
-      
-      toast({
-        description: `Level up! You reached level ${newLevel}`,
-        variant: "default",
-      });
-    }
-
-    await updateProgress({
-      experience: newExperience >= progress.experience_required ? 0 : newExperience,
-      level: newLevel,
-      experience_required: newExpRequired
-    });
-  };
-
-  const updateAutoClickPower = async (power: number) => {
-    await updateProgress({ auto_click_power: power });
-  };
-
-  // Fixed daily reward claim function with proper date handling
-  const claimDailyReward = async (): Promise<{ success: boolean; coins?: number; diamonds?: number; alreadyClaimed?: boolean }> => {
-    if (!progress) return { success: false };
-
-    try {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) return { success: false };
-
-      // Get today's date in YYYY-MM-DD format in local timezone
-      const today = new Date();
-      const todayString = today.getFullYear() + '-' + 
-        String(today.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(today.getDate()).padStart(2, '0');
-      
-      console.log('Today:', todayString, 'Last claim:', progress.last_daily_reward);
-      
-      // Check if user already claimed today
-      if (progress.last_daily_reward === todayString) {
-        return { success: false, alreadyClaimed: true };
-      }
-
-      // Get current upgrade count from localStorage to determine if user can claim
-      const currentUpgrades = parseInt(localStorage.getItem('cardUpgrades') || '0');
-      
-      // User must have at least 1 upgrade to claim daily rewards
-      if (currentUpgrades === 0) {
-        toast({
-          description: "You need to upgrade at least one card before claiming daily rewards",
-          variant: "destructive",
-        });
-        return { success: false };
-      }
-
-      // Calculate rewards based on level with random bonus
-      const baseCoins = 1000;
-      const baseDiamonds = 1;
-      
-      // Add some randomness to rewards (10-50% bonus)
-      const randomBonus = 0.1 + Math.random() * 0.4;
-      const coinsReward = Math.floor(baseCoins * progress.level * (1 + randomBonus));
-      const diamondsReward = Math.floor((baseDiamonds + Math.floor(progress.level / 5)) * (1 + randomBonus));
-
-      // Update database with rewards and last claim date
-      const newCoins = progress.coins + coinsReward;
-      const newDiamonds = progress.diamonds + diamondsReward;
-      
-      const { error } = await supabase
-        .from('user_progress')
-        .update({
-          coins: newCoins,
-          diamonds: newDiamonds,
-          last_daily_reward: todayString
-        })
-        .eq('user_id', authUser.id);
-
-      if (error) throw error;
-
-      // Update local state immediately
-      setProgress(prev => prev ? {
-        ...prev,
-        coins: newCoins,
-        diamonds: newDiamonds,
-        last_daily_reward: todayString
-      } : null);
-
-      toast({
-        description: `Daily reward claimed! +${coinsReward.toLocaleString()} coins, +${diamondsReward} diamonds`,
-        variant: "default",
-      });
-
-      return { success: true, coins: coinsReward, diamonds: diamondsReward };
-    } catch (error) {
-      console.error('Error claiming daily reward:', error);
-      toast({
-        description: "Error claiming daily reward",
-        variant: "destructive",
-      });
-      return { success: false };
-    }
-  };
+  const optimisticProgress = progress ? {
+    ...progress,
+    coins: getOptimisticValue('coins'),
+    diamonds: getOptimisticValue('diamonds'),
+    experience: getOptimisticValue('experience'),
+    experience_required: 1000000, // Always 1M
+    level: calculateLevelFromExperience(getOptimisticValue('experience'))
+  } : null;
 
   return {
-    progress,
+    progress: optimisticProgress,
     loading,
-    updateProgress,
     addCoins,
     addDiamonds,
     addExperience,
     updateAutoClickPower,
-    claimDailyReward,
     refreshProgress: loadUserProgress
   };
 };

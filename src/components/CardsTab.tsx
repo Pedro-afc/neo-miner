@@ -1,13 +1,13 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Coins, Diamond, Zap, Clock, Star, Crown, Rocket, Bot, TrendingUp } from 'lucide-react';
+import { Coins, Diamond, Zap, Clock, Star, Crown, Rocket, Bot, TrendingUp, Cpu, Factory, Sparkles, Target, Shield, Gem, Hammer, Wrench, Cog, Wifi } from 'lucide-react';
 import { toast } from "@/hooks/use-toast";
 import { useUserCards } from '@/hooks/useUserCards';
 import { useUserProgress } from '@/hooks/useUserProgress';
+import { useTelegramStars } from '@/hooks/useTelegramStars';
 import { formatNumber, calculateAutoClickIncrement } from '@/utils/gameUtils';
 
 interface GameState {
@@ -36,6 +36,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
   const { coins, setCoins, diamonds, setDiamonds } = gameState;
   const { cards, loading, getCard, upgradeCard } = useUserCards();
   const { progress } = useUserProgress();
+  const { stars: telegramStars } = useTelegramStars();
   const [selectedCategory, setSelectedCategory] = useState('mining');
 
   const cardData: CardData[] = [
@@ -90,6 +91,36 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       rarity: 'mythic',
       category: 'mining'
     },
+    {
+      id: 'nano_assembler',
+      name: 'Nano Assembler',
+      description: 'Molecular-level resource construction',
+      icon: Cpu,
+      basePrice: 750,
+      baseExpBonus: 35,
+      rarity: 'rare',
+      category: 'mining'
+    },
+    {
+      id: 'plasma_forge',
+      name: 'Plasma Forge',
+      description: 'Forges materials using stellar plasma',
+      icon: Factory,
+      basePrice: 5000,
+      baseExpBonus: 100,
+      rarity: 'epic',
+      category: 'mining'
+    },
+    {
+      id: 'void_processor',
+      name: 'Void Processor',
+      description: 'Processes dark matter into energy',
+      icon: Sparkles,
+      basePrice: 50000,
+      baseExpBonus: 400,
+      rarity: 'legendary',
+      category: 'mining'
+    },
 
     // Business Cards
     {
@@ -120,6 +151,36 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       basePrice: 25000,
       baseExpBonus: 300,
       rarity: 'legendary',
+      category: 'business'
+    },
+    {
+      id: 'delivery_service',
+      name: 'Delivery Service',
+      description: 'Fast and reliable delivery network',
+      icon: Target,
+      basePrice: 600,
+      baseExpBonus: 28,
+      rarity: 'rare',
+      category: 'business'
+    },
+    {
+      id: 'gaming_studio',
+      name: 'Gaming Studio',
+      description: 'Create the next viral games',
+      icon: Shield,
+      basePrice: 3000,
+      baseExpBonus: 85,
+      rarity: 'epic',
+      category: 'business'
+    },
+    {
+      id: 'space_tourism',
+      name: 'Space Tourism',
+      description: 'Take people to the stars',
+      icon: Rocket,
+      basePrice: 75000,
+      baseExpBonus: 600,
+      rarity: 'mythic',
       category: 'business'
     },
 
@@ -153,13 +214,86 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       baseExpBonus: 500,
       rarity: 'mythic',
       category: 'investment'
+    },
+    {
+      id: 'precious_metals',
+      name: 'Precious Metals',
+      description: 'Gold, silver, and rare metals',
+      icon: Gem,
+      basePrice: 1500,
+      baseExpBonus: 50,
+      rarity: 'rare',
+      category: 'investment'
+    },
+    {
+      id: 'art_collection',
+      name: 'Art Collection',
+      description: 'Masterpieces that appreciate',
+      icon: Star,
+      basePrice: 8000,
+      baseExpBonus: 150,
+      rarity: 'epic',
+      category: 'investment'
+    },
+    {
+      id: 'venture_capital',
+      name: 'Venture Capital',
+      description: 'Fund the future unicorns',
+      icon: Rocket,
+      basePrice: 200000,
+      baseExpBonus: 1500,
+      rarity: 'mythic',
+      category: 'investment'
+    },
+
+    // Technology Cards
+    {
+      id: 'ai_assistant',
+      name: 'AI Assistant',
+      description: 'Personal artificial intelligence',
+      icon: Cpu,
+      basePrice: 400,
+      baseExpBonus: 20,
+      rarity: 'common',
+      category: 'technology'
+    },
+    {
+      id: 'quantum_computer',
+      name: 'Quantum Computer',
+      description: 'Next-gen computing power',
+      icon: Zap,
+      basePrice: 12000,
+      baseExpBonus: 180,
+      rarity: 'legendary',
+      category: 'technology'
+    },
+    {
+      id: 'neural_network',
+      name: 'Neural Network',
+      description: 'Advanced machine learning',
+      icon: Wifi,
+      basePrice: 2000,
+      baseExpBonus: 65,
+      rarity: 'epic',
+      category: 'technology'
+    },
+    {
+      id: 'robotics_lab',
+      name: 'Robotics Lab',
+      description: 'Build autonomous workers',
+      icon: Cog,
+      basePrice: 6000,
+      baseExpBonus: 135,
+      rarity: 'epic',
+      category: 'technology'
     }
   ];
 
   const categories = [
     { id: 'mining', name: 'Mining', icon: Bot },
     { id: 'business', name: 'Business', icon: Crown },
-    { id: 'investment', name: 'Investment', icon: TrendingUp }
+    { id: 'investment', name: 'Investment', icon: TrendingUp },
+    { id: 'technology', name: 'Tech', icon: Cpu }
   ];
 
   const getCardStats = (cardId: string) => {
@@ -200,10 +334,8 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
     const stats = getCardStats(cardId);
     if (!stats || !canUpgradeCard(cardId)) return;
 
-    // Deduct coins first
     setCoins(prev => prev - stats.nextPrice);
 
-    // Perform the upgrade - this will automatically recalculate mining power
     const success = await upgradeCard(
       cardId,
       stats.level + 1,
@@ -212,7 +344,6 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
     );
 
     if (!success) {
-      // Refund coins if upgrade failed
       setCoins(prev => prev + stats.nextPrice);
     }
   };
@@ -305,15 +436,15 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
                   : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
             >
-              <Icon className="w-5 h-5" />
-              <span className="font-bold">{category.name.toUpperCase()}</span>
+              <Icon className="w-4 h-4" />
+              <span className="font-bold text-xs">{category.name.toUpperCase()}</span>
             </Button>
           );
         })}
       </div>
 
-      {/* Cards Grid */}
-      <div className="grid grid-cols-1 gap-4">
+      {/* Cards Grid - 2 columns layout */}
+      <div className="grid grid-cols-2 gap-3">
         {filteredCards.map((cardInfo) => {
           const stats = getCardStats(cardInfo.id);
           const canUpgrade = canUpgradeCard(cardInfo.id);
@@ -323,66 +454,67 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
           return (
             <Card
               key={cardInfo.id}
-              className={`bg-gradient-to-r ${getRarityColor(cardInfo.rarity)} p-4 border-2 backdrop-blur-sm`}
+              className={`bg-gradient-to-r ${getRarityColor(cardInfo.rarity)} p-3 border-2 backdrop-blur-sm`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="p-3 rounded-lg bg-white/20 backdrop-blur-sm">
-                    <Icon className="w-8 h-8 text-white drop-shadow-lg" />
+              <div className="space-y-3">
+                {/* Header */}
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-white/20 backdrop-blur-sm">
+                    <Icon className="w-5 h-5 text-white drop-shadow-lg" />
                   </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-bold text-white text-lg drop-shadow-md">
-                        {cardInfo.name}
-                      </h3>
-                      <Badge className={getRarityBadgeColor(cardInfo.rarity)}>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-white text-sm drop-shadow-md truncate">
+                      {cardInfo.name}
+                    </h3>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <Badge className={`${getRarityBadgeColor(cardInfo.rarity)} text-xs`}>
                         {cardInfo.rarity.toUpperCase()}
                       </Badge>
                       {stats && stats.level > 0 && (
-                        <Badge className="bg-green-600 text-white border-0">
+                        <Badge className="bg-green-600 text-white border-0 text-xs">
                           LVL {stats.level}
                         </Badge>
                       )}
                     </div>
-                    
-                    <p className="text-sm text-white/90 mb-3 drop-shadow-sm">
-                      {cardInfo.description}
-                    </p>
-                    
-                    {stats && (
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-gray-300">Mining Power</p>
-                          <p className="font-bold text-green-300">
-                            +{stats.autoClickBonus}/sec
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-gray-300">EXP Bonus</p>
-                          <p className="font-bold text-purple-300">
-                            +{formatNumber(stats.expBonus)}
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
                 
-                <div className="text-right flex flex-col items-end gap-3">
+                <p className="text-xs text-white/90 drop-shadow-sm line-clamp-2">
+                  {cardInfo.description}
+                </p>
+                
+                {stats && (
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-gray-300">Mining</p>
+                      <p className="font-bold text-green-300">
+                        +{stats.autoClickBonus}/s
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-300">EXP</p>
+                      <p className="font-bold text-purple-300">
+                        +{formatNumber(stats.expBonus)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Action Area */}
+                <div className="flex items-center justify-between">
                   {stats && (
                     <>
-                      <div className="flex items-center gap-2 text-yellow-300">
-                        <Coins className="w-5 h-5 drop-shadow-lg" />
-                        <span className="font-bold text-lg drop-shadow-md">
+                      <div className="flex items-center gap-1 text-yellow-300">
+                        <Coins className="w-4 h-4 drop-shadow-lg" />
+                        <span className="font-bold text-sm drop-shadow-md">
                           {formatNumber(stats.nextPrice)}
                         </span>
                       </div>
                       
                       {cooldownTime ? (
-                        <div className="flex items-center gap-2 text-orange-300">
-                          <Clock className="w-4 h-4" />
-                          <span className="text-sm font-bold">{cooldownTime}</span>
+                        <div className="flex items-center gap-1 text-orange-300">
+                          <Clock className="w-3 h-3" />
+                          <span className="text-xs font-bold">{cooldownTime}</span>
                         </div>
                       ) : (
                         <Button
@@ -393,10 +525,10 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
                             canUpgrade
                               ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0 text-white'
                               : 'bg-gray-700 cursor-not-allowed border-0 text-gray-400'
-                          } font-bold px-4 py-2`}
+                          } font-bold px-2 py-1 text-xs`}
                         >
-                          <TrendingUp className="w-4 h-4 mr-2" />
-                          {stats.level === 0 ? 'BUY' : 'UPGRADE'}
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          {stats.level === 0 ? 'BUY' : 'UP'}
                         </Button>
                       )}
                     </>
@@ -411,7 +543,7 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
       {/* Stats Summary */}
       <Card className="bg-gray-900/80 backdrop-blur-sm border-2 border-gray-600 p-6">
         <h3 className="text-xl font-bold text-white mb-4 drop-shadow-md">Your Resources</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-lg bg-yellow-500/20">
               <Coins className="w-6 h-6 text-yellow-400 drop-shadow-lg" />
@@ -432,6 +564,18 @@ const CardsTab = ({ gameState }: { gameState: GameState }) => {
               <p className="text-sm text-gray-300 font-medium">Diamonds</p>
               <p className="text-xl font-bold text-blue-400 drop-shadow-md">
                 {formatNumber(diamonds)}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-purple-500/20">
+              <Star className="w-6 h-6 text-purple-400 drop-shadow-lg" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-300 font-medium">Telegram Stars</p>
+              <p className="text-xl font-bold text-purple-400 drop-shadow-md">
+                {telegramStars}
               </p>
             </div>
           </div>

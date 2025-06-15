@@ -13,6 +13,9 @@ export interface TelegramPayment {
   error?: string;
 }
 
+// The wallet address where all purchases should be sent
+const GAME_WALLET_ADDRESS = "UQBnF4WcV3wNgFSLKJHFmM2aS_iKqGENoF-lH4iYHvYKxKLn";
+
 // TON Connect integration for real wallet connection
 export const connectTelegramWallet = async (): Promise<TelegramWallet> => {
   try {
@@ -27,10 +30,10 @@ export const connectTelegramWallet = async (): Promise<TelegramWallet> => {
           
           // Initialize TON Connect
           tonConnect.connect({
-            manifestUrl: 'https://your-app-domain.com/tonconnect-manifest.json',
+            manifestUrl: window.location.origin + '/tonconnect-manifest.json',
             buttonRootId: null
           }).then((wallet: any) => {
-            if (wallet) {
+            if (wallet && wallet.account) {
               const connectedWallet: TelegramWallet = {
                 isConnected: true,
                 address: wallet.account.address,
@@ -47,41 +50,41 @@ export const connectTelegramWallet = async (): Promise<TelegramWallet> => {
             console.error('TON Connect error:', error);
             reject(new Error('TON Connect not available'));
           });
-        } else if ('TelegramWebviewProxy' in window) {
-          // Use Telegram's native wallet integration
-          const proxy = (window as any).TelegramWebviewProxy;
-          
-          proxy.postEvent('web_app_request_wallet_access', {}, (result: any) => {
-            if (result.wallet_address) {
-              const wallet: TelegramWallet = {
-                isConnected: true,
-                address: result.wallet_address,
-                balance: result.balance || 0,
-                network: 'mainnet'
-              };
-              
-              localStorage.setItem('telegramWallet', JSON.stringify(wallet));
-              resolve(wallet);
-            } else {
-              reject(new Error('Wallet access denied'));
-            }
-          });
         } else {
-          // Fallback: Use Telegram WebApp payment API
+          // Use Telegram's built-in wallet if available
           webApp.ready();
           
-          // Generate a TON wallet address format for display
-          const mockAddress = generateTONAddress();
-          
-          const wallet: TelegramWallet = {
-            isConnected: true,
-            address: mockAddress,
-            balance: 0,
-            network: 'mainnet'
-          };
-          
-          localStorage.setItem('telegramWallet', JSON.stringify(wallet));
-          resolve(wallet);
+          // Try to access Telegram's internal wallet
+          if ('requestWalletAccess' in webApp) {
+            (webApp as any).requestWalletAccess((result: any) => {
+              if (result.success && result.wallet_address) {
+                const wallet: TelegramWallet = {
+                  isConnected: true,
+                  address: result.wallet_address,
+                  balance: result.balance || 0,
+                  network: 'mainnet'
+                };
+                
+                localStorage.setItem('telegramWallet', JSON.stringify(wallet));
+                resolve(wallet);
+              } else {
+                reject(new Error('Wallet access denied'));
+              }
+            });
+          } else {
+            // Fallback: Generate a TON wallet address format for display
+            const mockAddress = generateTONAddress();
+            
+            const wallet: TelegramWallet = {
+              isConnected: true,
+              address: mockAddress,
+              balance: 0,
+              network: 'mainnet'
+            };
+            
+            localStorage.setItem('telegramWallet', JSON.stringify(wallet));
+            resolve(wallet);
+          }
         }
       });
     } else {
@@ -141,6 +144,40 @@ export const getWalletBalance = async (address: string): Promise<number> => {
   return 0;
 };
 
+export const getTelegramStars = async (): Promise<number> => {
+  try {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      const webApp = window.Telegram.WebApp;
+      
+      return new Promise((resolve) => {
+        // Try to get stars from Telegram WebApp
+        if ('getStars' in webApp) {
+          (webApp as any).getStars((stars: number) => {
+            resolve(stars || 0);
+          });
+        } else if ('requestStarsBalance' in webApp) {
+          (webApp as any).requestStarsBalance((result: any) => {
+            resolve(result.balance || 0);
+          });
+        } else {
+          // Fallback to initDataUnsafe if available
+          const initData = webApp.initDataUnsafe;
+          if (initData && initData.user && 'stars' in initData.user) {
+            resolve((initData.user as any).stars || 0);
+          } else {
+            resolve(0);
+          }
+        }
+      });
+    }
+    
+    return 0;
+  } catch (error) {
+    console.error('Error getting Telegram stars:', error);
+    return 0;
+  }
+};
+
 export const sendTONPayment = async (amount: number, description: string): Promise<TelegramPayment> => {
   try {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
@@ -155,7 +192,7 @@ export const sendTONPayment = async (amount: number, description: string): Promi
             validUntil: Math.floor(Date.now() / 1000) + 60, // 1 minute
             messages: [
               {
-                address: "EQBvW8Z5huBkMJYdnfAEM5JqTNkuWX3diqYENkWsIL0XggGG", // Your receiving address
+                address: GAME_WALLET_ADDRESS, // Send to game wallet
                 amount: (amount * 1000000000).toString(), // Convert to nanotons
                 payload: description
               }
@@ -176,17 +213,6 @@ export const sendTONPayment = async (amount: number, description: string): Promi
                 error: error.message
               });
             });
-        } else if ('openInvoice' in webApp) {
-          // Use Telegram's invoice system
-          const invoiceUrl = `https://t.me/invoice/test_${Math.random().toString(36).substr(2, 9)}`;
-          
-          (webApp as any).openInvoice(invoiceUrl, (status: string) => {
-            resolve({
-              success: status === 'paid',
-              transactionHash: status === 'paid' ? `tx_${Date.now()}` : undefined,
-              error: status !== 'paid' ? 'Payment cancelled or failed' : undefined
-            });
-          });
         } else if ('requestPayment' in webApp) {
           // Use Telegram Stars payment system
           const invoice = {
