@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTelegramAuth } from './useTelegramAuth';
@@ -195,6 +194,56 @@ export const useUserProgress = () => {
     }
   }, [progress]);
 
+  const claimDailyReward = useCallback(async () => {
+    if (!progress) return;
+
+    try {
+      const currentUpgrades = parseInt(localStorage.getItem('cardUpgrades') || '0');
+      if (currentUpgrades === 0) {
+        toast({
+          description: "You need to upgrade at least one card to claim daily rewards!",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      if (progress.last_daily_reward === today) {
+        toast({
+          description: "Daily reward already claimed today!",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Calculate rewards
+      const baseCoins = 1000;
+      const baseDiamonds = 1;
+      const randomBonus = 0.1 + Math.random() * 0.4; // 10% to 50% bonus
+      
+      const rewardCoins = Math.floor(baseCoins * progress.level * (1 + randomBonus));
+      const rewardDiamonds = Math.floor((baseDiamonds + Math.floor(progress.level / 5)) * (1 + randomBonus));
+
+      // Update progress
+      await updateProgressInDB({
+        coins: progress.coins + rewardCoins,
+        diamonds: progress.diamonds + rewardDiamonds,
+        last_daily_reward: today
+      });
+
+      toast({
+        description: `Daily reward claimed! +${rewardCoins.toLocaleString()} coins, +${rewardDiamonds} diamonds`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error claiming daily reward:', error);
+      toast({
+        description: "Error claiming daily reward",
+        variant: "destructive",
+      });
+    }
+  }, [progress]);
+
   const optimisticProgress = progress ? {
     ...progress,
     coins: getOptimisticValue('coins'),
@@ -211,6 +260,7 @@ export const useUserProgress = () => {
     addDiamonds,
     addExperience,
     updateAutoClickPower,
+    claimDailyReward,
     refreshProgress: loadUserProgress
   };
 };

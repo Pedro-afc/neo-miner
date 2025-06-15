@@ -26,3 +26,22 @@ export const getExperienceForCurrentLevel = (experience: number): number => {
   const currentLevel = calculateLevelFromExperience(experience);
   return experience - ((currentLevel - 1) * 1000000);
 };
+
+// localStorage helper functions
+export const saveGameData = (key: string, data: any): void => {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error('Error saving game data:', error);
+  }
+};
+
+export const loadGameData = (key: string, defaultValue: any): any => {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : defaultValue;
+  } catch (error) {
+    console.error('Error loading game data:', error);
+    return defaultValue;
+  }
+};
